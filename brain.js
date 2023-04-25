@@ -1,235 +1,200 @@
-/** @param {NS} ns */
-export async function main(ns) {
+/**
+ * @param {NS} ns
+ * @returns {[]string}
+ */
+
+//function loop checks if each program that open ports exists.
+function countPrograms(ns) {
+	const fileArray = ["brutessh.exe", "ftpcrack.exe", "relaysmtp.exe", "httpworm.exe", "sqlinject.exe"];
+	let fileCount = 0;
+	for (let i = 0; i < fileArray.length;) {
+		fileCount += ns.fileExists(fileArray[i], ns.getHostname());
+		i++;
+	}
+	return fileCount;
+}
+
+//function called canHack that tests the ports required to hack and the hacking level required to access.
+//returns false if either tests aren't passed, returns true otherwise.
+function canHack(ns, server) {
+	ns.print('canHack called');
+	if (ns.getServerRequiredHackingLevel(server) > ns.getHackingLevel()) return false;
+	if (ns.getServerNumPortsRequired(server) > countPrograms(ns)) return false;
+	return true;
+}
+
+//function to open all the ports on the parameter server.
+function breaking(ns, server) {
+	ns.print('breaking called');
+	ns.print('ns.getServerNumPortsRequired thinks the server is: ' + server);
+	let numPortsReq = ns.getServerNumPortsRequired(server);
+	if (numPortsReq > 0) { ns.brutessh(server); }
+	if (numPortsReq > 1) { ns.ftpcrack(server); }
+	if (numPortsReq > 2) { ns.relaysmtp(server); }
+	if (numPortsReq > 3) { ns.httpworm(server); }
+	if (numPortsReq > 4) { ns.sqlinject(server); }
+	ns.print('breaking applied to ' + server);
+}
+
+//function to gain root access to the parameter server
+function entering(ns, server) {
+	ns.print('entering called');
+	if (ns.hasRootAccess(server) == false) {
+		ns.nuke(server);
+		ns.print("nuked " + server);
+	}
+}
+
+// copied this straight from #early-game pinned messages in the bitburner discord. posted by xsinx#1018
+// Returns a weight that can be used to sort servers by hack desirability
+function Weight(ns, server) {
+	if (!server) return 0;
+	if (server.startsWith('hacknet-node')) return 0;
+	let player = ns.getPlayer();
+	let so = ns.getServer(server);
+	so.hackDifficulty = so.minDifficulty;
+	if (so.requiredHackingSkill > ns.getHackingLevel()) { return 0; }
+	if (ns.getServerNumPortsRequired(server) > countPrograms(ns)) { return 0; }
+	let weight = so.moneyMax / so.minDifficulty;
+	if (ns.fileExists('Formulas.exe')) {
+		weight = so.moneyMax / ns.formulas.hacking.weakenTime(so, player) * ns.formulas.hacking.hackChance(so, player);
+	}
+	else
+		if (so.requiredHackingSkill > ns.getHackingLevel())
+			return 0;
+	return weight;
+}
+
+//kills the running script and runs new script on parameter server at parameter target.
+function employ(ns, server, paramTarget) {
+	ns.print("employ called");
 
 	const virus = 'early-hack-template.js';
 	const virusRam = ns.getScriptRam(virus);
+	if (ns.fileExists(virus, server) == false) { ns.scp(virus, server); }
+	if (ns.scriptRunning(virus, server)) { ns.scriptKill(virus, server); }
+	let maxThreads = Math.floor(ns.getServerMaxRam(server) / virusRam);
+	ns.exec(virus, server, maxThreads, paramTarget);
+	ns.print(virus + ' ran on ' + server + ' with ' + maxThreads + ' threads, with a target of ' + paramTarget);
+}
 
-	//creates an array with the names of all of current programs that open ports.
-	var fileArray = ["brutessh.exe", "ftpcrack.exe", "relaysmtp.exe", "httpworm.exe", "sqlinject.exe"];
-	var fileCount = 0;
-	//loop checks if each program that open ports exists.
-	//javascript translates true to 1 and false to 0
-	//add them all together and you get the number of programs that exist assigned to the fileCount variable.
-	function countPrograms() {
 
-		for (var i = 0; i < fileArray.length;) {
-			fileCount += ns.fileExists(fileArray[i]);
-			i++;
+function getServerList(ns) {
+	let found = [];
+	let unscanned = [ns.getHostname()];
+
+	while (unscanned.length > 0) {
+		let server = unscanned.pop();
+		let neighboors = ns.scan(server);
+		for (let i = 0; i < neighboors.length; i++) {
+			if (found.includes(neighboors[i])) continue;
+			found.push(neighboors[i]);
+			unscanned.push(neighboors[i]);
 		}
+
 	}
-	//calls an initial count of programs.
-	countPrograms();
+	return found;
+}
 
-	//function called canHack that tests the ports required to hack and the hacking level required to access.
-	//returns false if either tests aren't passed, returns true otherwise.
-	function canHack(server) {
-		if (ns.getServerRequiredHackingLevel(server) > ns.getHackingLevel()) return false;
-		if (ns.getServerNumPortsRequired(server) > fileCount) return false;
-		return true;
-	}
+//function to return a 2d array containing the results of getServerList(); in one column and Weight(); in another
+function updateTarget(ns) {
+	return getServerList(ns).map((server) => ({ name: server, score: Weight(ns, server) }))
+}
 
-	//function called breaking with the parameter of the server to open all the ports on the server.
-	function breaking(server) {
-		let numPortsReq = ns.getServerNumPortsRequired(server);
-		if (numPortsReq > 0) {
-			ns.brutessh(server);
-		}
-		if (numPortsReq > 1) {
-			ns.ftpcrack(server);
-		}
-		if (numPortsReq > 2) {
-			ns.relaysmtp(server);
-		}
-		if (numPortsReq > 3) {
-			ns.httpworm(server);
-		}
-		if (numPortsReq > 4) {
-			ns.sqlinject(server);
-		}
-	}
+//function that requires the results of updateTarget() and parses the information to find the highest weighted server name.
+function getBestTarget(ns, serverList) {
+	return serverList.sort((a, b) => b.score - a.score)[0]
+}
 
-	function entering(server) {
-		ns.nuke(server);
-	}
-
-	function employ(server) {
-		ns.scp(virus, server);
-		if (ns.scriptRunning(virus, server)) {
-			ns.killall(server);
-		}
-		let maxThreads = Math.floor(ns.getServerMaxRam(server) / virusRam);
-		ns.exec(virus, server, maxThreads, target);
-	}
-
-	// copied this straight from #early-game pinned messages in the bitburner discord. posted by xsinx#1018
-	// Returns a weight that can be used to sort servers by hack desirability
-	function Weight(ns, server) {
-		if (!server) return 0;
-
-		// Don't ask, endgame stuff
-		if (server.startsWith('hacknet-node')) return 0;
-
-		// Get the player information
-		let player = ns.getPlayer();
-
-		// Get the server information
-		let so = ns.getServer(server);
-
-		// Set security to minimum on the server object (for Formula.exe functions)
-		so.hackDifficulty = so.minDifficulty;
-
-		// We cannot hack a server that has more than our hacking skill so these have no value
-		if (so.requiredHackingSkill > ns.getHackingLevel()) {
-			return 0;
-		}
-
-		//adding my own line of requiring enough programs to actually get into a server to give any weight to a target
-		if (ns.getServerNumPortsRequired(server) > fileCount) {
-			return 0;
-		}
-
-		// Default pre-Formulas.exe weight. minDifficulty directly affects times, so it substitutes for min security times
-		let weight = so.moneyMax / so.minDifficulty;
-
-		// If we have formulas, we can refine the weight calculation
-		if (ns.fileExists('Formulas.exe')) {
-			// We use weakenTime instead of minDifficulty since we got access to it, 
-			// and we add hackChance to the mix (pre-formulas.exe hack chance formula is based on current security, which is useless)
-			weight = so.moneyMax / ns.formulas.hacking.weakenTime(so, player) * ns.formulas.hacking.hackChance(so, player);
-		}
-		else
-			// If we do not have formulas, we can't properly factor in hackchance, so we lower the hacking level tolerance by half
-			if (so.requiredHackingSkill > player.skills.hacking / 2)
-				return 0;
-
-		return weight;
-	}
-
-	function getServerList() {
-		let serverTargetList = [];
-		let scanResults = [ns.getHostname()];
-
-		//scanResults has a single servername inside it when this initializes, the current host.
-		while (scanResults.length > 0) {
-			//takes hostname OUT of the scanResults array and assigns it to potentialTargetServer
-			var potentialTargetServer = scanResults.pop();
-			//neighboringServers = the array of all nearby nodes of potentialTargetServer
-			var neighboringServers = ns.scan(potentialTargetServer);
-
-			for (var i = 0; i < neighboringServers.length; i++) {
-				if (serverTargetList.includes(neighboringServers[i])) continue;
-				serverTargetList.push(neighboringServers[i]);
-				scanResults.push(neighboringServers[i]);
-			}
-
-		}
-		return serverTargetList;
-	}
-
-	let serverList = getServerList();
-	let targetNameAndWeight = new Array(serverList.length);
-
-	function updateTarget(server) {
-		for (let i = 0; i < serverList.length; i++) {
-			targetNameAndWeight[i] = ["", 0];
-			targetNameAndWeight[i][0] = serverList[i];
-			targetNameAndWeight[i][1] = Weight(ns, serverList[i]);
-		}
-	}
-
-	function getBestTarget(twodeeArray) {
-		let bestTarget = "";
-		let highestWeight = 0;
-
-		for (let i = 0; i < twodeeArray.length; i++) {
-			let weight = twodeeArray[i][1];
-			if (weight > highestWeight) {
-				highestWeight = weight;
-				bestTarget = twodeeArray[i][0];
-			}
-		}
-
-		return bestTarget;
-	}
-
-	updateTarget();
-	
-	//sets the target with the most desirability from all possible servers
-	let target = getBestTarget(targetNameAndWeight);
-
-	//accessing the target first so we can run our virus with impunity
-	breaking(target);
-	entering(target);
-
-	function attack(server) {
-		for (let i = 0; i < serverList.length; i++) {
-			let curTar = serverList[i];
-			if (canHack(curTar)) {
-				breaking(curTar);
-				entering(curTar);
-				if (ns.getServerMaxRam(curTar) > virusRam) {
-					employ(curTar);
-				}
+//Function to call the results of getServerList() and go item by item through the array
+//to gain root access and utilize the ram if any is available.
+function attack(ns, server) {
+	const virus = 'early-hack-template.js';
+	const virusRam = ns.getScriptRam(virus);
+	let curTar = getServerList(ns);
+	for (let i = 0; i < curTar.length; i++) {
+		if (canHack(ns, curTar[i])) {
+			breaking(ns, curTar[i]);
+			entering(ns, curTar[i]);
+			if (ns.getServerMaxRam(curTar[i]) > virusRam) {
+				employ(ns, curTar[i], server);
 			}
 		}
 	}
+	ns.print('All non-friendly servers now directed to hack: ' + server + ' with ' + virus);
+}
 
+//function to direct the purchased servers as well. 
+function commandPurchasedServers(ns, server) {
 
-
-	//function to direct the purchased servers as well. 
-	function commandPurchasedServers(server) {
-		if (ns.getPurchasedServers().length > 0) {
-
-			//if true, this for loop will tell the purchased servers whom to target as well.
-			for (let i = 0; i < ns.getPurchasedServers().length; i++) {
-				//acquires server ram size
-				let serverName = "pserv-" + i;
-				let serverRam = ns.getServerMaxRam(serverName);
-				//calculates how many threads we can run our script on a single server at the same time
-				//the math.floor() calculation rounds down so even if it's 2.999999999999999... it will 
-				//still round down to 2.
-				let maxThreads = Math.floor(serverRam / virusRam);
-				//copy the virus to the server
-				ns.scp(virus, serverName);
-				//if there are any scripts currently running on the server		
-				if (ns.scriptRunning(virus, serverName)) {
-					//end the scripts first (if any are running and you try to run more it errors out)
-					ns.scriptKill(virus, serverName);
-				}
-				//execute script on server with maximum number of threads possible.
-				ns.exec(virus, serverName, maxThreads, target);
+	let virus = 'early-hack-template.js';
+	let virusRam = ns.getScriptRam(virus);
+	let pServerList = ns.getPurchasedServers();
+	if (pServerList.length > 0) {
+		for (let i = 0; i < pServerList.length; i++) {
+			let serverName = pServerList[i];
+			let serverRam = ns.getServerMaxRam(serverName);
+			let maxThreads = Math.floor(serverRam / virusRam);
+			ns.scp(virus, serverName);
+			if (ns.scriptRunning(virus, serverName)) {
+				ns.scriptKill(virus, serverName);
 			}
+			ns.exec(virus, serverName, maxThreads, server);
 		}
 	}
+	ns.print('All purchased friendly servers now directed to hack: ' + server + ' with ' + virus);
+}
 
-	//function to initialize the home server to use half its ram to use the virus.
-	//this helps in the early part of a run especially
-	function homeAttack(server) {
-		let homeServer = ns.getHostname();
-		let homeRam = (ns.getServerMaxRam(homeServer) / 2);
-		let homeThreads = Math.floor(homeRam / virusRam);
-		if (ns.scriptRunning(virus, homeServer)) {
-			ns.scriptKill(virus, homeServer)
-		}
-		ns.exec(virus, homeServer, homeThreads, target);
+//function to initialize the home server to use half its ram to use the virus.
+//this helps in the early part of a run especially
+function homeAttack(ns, server) {
+	const virus = 'early-hack-template.js';
+	const virusRam = ns.getScriptRam(virus);
+	let homeServer = ns.getHostname();
+	if (ns.scriptRunning(virus, homeServer)) {
+		ns.scriptKill(virus, homeServer)
 	}
+	let homeRam = (ns.getServerMaxRam(homeServer) - ns.getServerUsedRam(homeServer));
+	let homeThreads = Math.floor(homeRam / virusRam);
+	ns.exec(virus, homeServer, homeThreads, server);
+	ns.print('Home computer now directed to hack: ' + server + ' with ' + virus + ' ' + homeThreads + ' times.');
+}
 
-	//finally, we want to run all of what we've established on a loop, 
-	//and refire scripts when a new target weight is established
+
+/** @param {NS} ns */
+export async function main(ns) {
+
+	ns.disableLog('ALL'); 
+	ns.tail();
+	const virus = 'early-hack-template.js';
+	const virusRam = ns.getScriptRam(virus);
+	let fileCount = countPrograms(ns);
+	let serverList = getServerList(ns);
+	let serverListWeights = updateTarget(ns);
+	let target = getBestTarget(ns, serverListWeights).name;
+	ns.print('Target is now: ' + target);
+	breaking(ns, target);
+	entering(ns, target);
+	attack(ns, target);
+	commandPurchasedServers(ns, target);
+	homeAttack(ns, target);
+
+
+	let curTar = target;
 	while (true) {
-		let currentTarget = target;
-		countPrograms();
-		updateTarget(targetNameAndWeight);
-		if (!currentTarget == getBestTarget(targetNameAndWeight)) {
-			target = getBestTarget(targetNameAndWeight);
-			breaking(target);
-			entering(target);
-			attack(target);
-			commandPurchasedServers(target);
-			homeAttack(target);
-
-		}
 		await ns.sleep(10000);
+		countPrograms(ns);
+		serverListWeights = updateTarget(ns);
+		let savedTar = getBestTarget(ns, serverListWeights).name;
+		if (curTar == savedTar) continue;
+		curTar = savedTar;
+		ns.print('Target is now: ' + curTar);
+		breaking(ns, curTar);
+		entering(ns, curTar);
+		attack(ns, curTar);
+		commandPurchasedServers(ns, curTar);
+		homeAttack(ns, curTar);
+
 	}
 
 }
