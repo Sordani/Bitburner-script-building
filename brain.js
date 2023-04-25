@@ -8,7 +8,7 @@ function countPrograms(ns) {
 	const fileArray = ["brutessh.exe", "ftpcrack.exe", "relaysmtp.exe", "httpworm.exe", "sqlinject.exe"];
 	let fileCount = 0;
 	for (let i = 0; i < fileArray.length;) {
-		fileCount += ns.fileExists(fileArray[i], ns.getHostname());
+		fileCount += ns.fileExists(fileArray[i], 'home');
 		i++;
 	}
 	return fileCount;
@@ -17,33 +17,19 @@ function countPrograms(ns) {
 //function called canHack that tests the ports required to hack and the hacking level required to access.
 //returns false if either tests aren't passed, returns true otherwise.
 function canHack(ns, server) {
-	ns.print('canHack called');
 	if (ns.getServerRequiredHackingLevel(server) > ns.getHackingLevel()) return false;
 	if (ns.getServerNumPortsRequired(server) > countPrograms(ns)) return false;
 	return true;
 }
 
 //function to open all the ports on the parameter server.
-function breaking(ns, server) {
-	ns.print('breaking called');
+function breakingAndEntering(ns, server, portScript) {
+	ns.print('breakingAndEntering called');
 	ns.print('ns.getServerNumPortsRequired thinks the server is: ' + server);
-	let numPortsReq = ns.getServerNumPortsRequired(server);
-	if (numPortsReq > 0) { ns.brutessh(server); }
-	if (numPortsReq > 1) { ns.ftpcrack(server); }
-	if (numPortsReq > 2) { ns.relaysmtp(server); }
-	if (numPortsReq > 3) { ns.httpworm(server); }
-	if (numPortsReq > 4) { ns.sqlinject(server); }
-	ns.print('breaking applied to ' + server);
+	ns.exec(portScript, 'home', 1, server);
+	ns.print('breakingAndEntering applied to ' + server);
 }
 
-//function to gain root access to the parameter server
-function entering(ns, server) {
-	ns.print('entering called');
-	if (ns.hasRootAccess(server) == false) {
-		ns.nuke(server);
-		ns.print("nuked " + server);
-	}
-}
 
 // copied this straight from #early-game pinned messages in the bitburner discord. posted by xsinx#1018
 // Returns a weight that can be used to sort servers by hack desirability
@@ -66,11 +52,8 @@ function Weight(ns, server) {
 }
 
 //kills the running script and runs new script on parameter server at parameter target.
-function employ(ns, server, paramTarget) {
+function employ(ns, server, paramTarget, virus, virusRam) {
 	ns.print("employ called");
-
-	const virus = 'early-hack-template.js';
-	const virusRam = ns.getScriptRam(virus);
 	if (ns.fileExists(virus, server) == false) { ns.scp(virus, server); }
 	if (ns.scriptRunning(virus, server)) { ns.scriptKill(virus, server); }
 	let maxThreads = Math.floor(ns.getServerMaxRam(server) / virusRam);
@@ -81,7 +64,7 @@ function employ(ns, server, paramTarget) {
 
 function getServerList(ns) {
 	let found = [];
-	let unscanned = [ns.getHostname()];
+	let unscanned = ['home'];
 
 	while (unscanned.length > 0) {
 		let server = unscanned.pop();
@@ -108,27 +91,22 @@ function getBestTarget(ns, serverList) {
 
 //Function to call the results of getServerList() and go item by item through the array
 //to gain root access and utilize the ram if any is available.
-function attack(ns, server) {
-	const virus = 'early-hack-template.js';
-	const virusRam = ns.getScriptRam(virus);
+function attack(ns, server, virus, virusRam, portScript) {
 	let curTar = getServerList(ns);
 	for (let i = 0; i < curTar.length; i++) {
 		if (canHack(ns, curTar[i])) {
-			breaking(ns, curTar[i]);
-			entering(ns, curTar[i]);
+			breakingAndEntering(ns, curTar[i], portScript);
 			if (ns.getServerMaxRam(curTar[i]) > virusRam) {
-				employ(ns, curTar[i], server);
+				employ(ns, curTar[i], server, virus, virusRam);
 			}
 		}
 	}
-	ns.print('All non-friendly servers now directed to hack: ' + server + ' with ' + virus);
+	ns.print('NUKEd servers now directed to hack: ' + server + ' with ' + virus);
 }
 
 //function to direct the purchased servers as well. 
-function commandPurchasedServers(ns, server) {
+function commandPurchasedServers(ns, server, virus, virusRam) {
 
-	let virus = 'early-hack-template.js';
-	let virusRam = ns.getScriptRam(virus);
 	let pServerList = ns.getPurchasedServers();
 	if (pServerList.length > 0) {
 		for (let i = 0; i < pServerList.length; i++) {
@@ -142,42 +120,41 @@ function commandPurchasedServers(ns, server) {
 			ns.exec(virus, serverName, maxThreads, server);
 		}
 	}
-	ns.print('All purchased friendly servers now directed to hack: ' + server + ' with ' + virus);
+	ns.print('Pservs now directed to hack: ' + server + ' with ' + virus);
 }
 
 //function to initialize the home server to use half its ram to use the virus.
 //this helps in the early part of a run especially
-function homeAttack(ns, server) {
-	const virus = 'early-hack-template.js';
-	const virusRam = ns.getScriptRam(virus);
-	let homeServer = ns.getHostname();
+function homeAttack(ns, server, virus, virusRam, reserveRam) {
+	let homeServer = 'home';
 	if (ns.scriptRunning(virus, homeServer)) {
 		ns.scriptKill(virus, homeServer)
 	}
-	let homeRam = (ns.getServerMaxRam(homeServer) - ns.getServerUsedRam(homeServer));
+	let homeRam = (ns.getServerMaxRam(homeServer) - ns.getServerUsedRam(homeServer) - reserveRam);
 	let homeThreads = Math.floor(homeRam / virusRam);
 	ns.exec(virus, homeServer, homeThreads, server);
-	ns.print('Home computer now directed to hack: ' + server + ' with ' + virus + ' ' + homeThreads + ' times.');
-}
+	ns.print('Home hacking: ' + server + ' with ' + virus + ', with ' + homeThreads + ' threads.');}
 
 
 /** @param {NS} ns */
 export async function main(ns) {
 
-	ns.disableLog('ALL'); 
+	ns.disableLog('ALL');
 	ns.tail();
+	//moneymaking script. default hack/grow/weaken loop or 'early-hack-template.js'
 	const virus = 'early-hack-template.js';
+	//script that contains logic to run all port opening programs and nuke.exe.
+	const portScript = 'portopener.js'
 	const virusRam = ns.getScriptRam(virus);
-	let fileCount = countPrograms(ns);
-	let serverList = getServerList(ns);
+	//arbitrary amount of ram to keep open on home computer. required for calling other scripts
+	const reserveRam = 4;
 	let serverListWeights = updateTarget(ns);
 	let target = getBestTarget(ns, serverListWeights).name;
 	ns.print('Target is now: ' + target);
-	breaking(ns, target);
-	entering(ns, target);
-	attack(ns, target);
-	commandPurchasedServers(ns, target);
-	homeAttack(ns, target);
+	breakingAndEntering(ns, target, portScript);
+	attack(ns, target, virus, virusRam, portScript)
+	commandPurchasedServers(ns, target, virus, virusRam)
+	homeAttack(ns, target, virus, virusRam, reserveRam);
 
 
 	let curTar = target;
@@ -189,11 +166,10 @@ export async function main(ns) {
 		if (curTar == savedTar) continue;
 		curTar = savedTar;
 		ns.print('Target is now: ' + curTar);
-		breaking(ns, curTar);
-		entering(ns, curTar);
-		attack(ns, curTar);
-		commandPurchasedServers(ns, curTar);
-		homeAttack(ns, curTar);
+		breakingAndEntering(ns, curTar, portScript);
+		attack(ns, curTar, virus, virusRam);
+		commandPurchasedServers(ns, curTar, virus, virusRam)
+		homeAttack(ns, curTar, virus, virusRam, reserveRam);
 
 	}
 
