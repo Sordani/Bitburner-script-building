@@ -7,14 +7,39 @@ async function growTarget(ns, server) {
 		if (gThreadsPossible >= gThreadsNeeded) {
 			ns.print('running grow.js on home server with ' + gThreadsNeeded + ' threads at ' + server.hostname);
 			ns.exec('grow.js', 'home', gThreadsNeeded, server.hostname);
+			let duration = gWaitTime + 100;
+			let expectedEnd = performance.now() + duration;
+			let timeRemaining = expectedEnd - performance.now();
+			while (timeRemaining > 0) {
+				timeRemaining = expectedEnd - performance.now();
+				ns.clearLog();
+				ns.print('running grow.js on home server with ' + gThreadsNeeded + ' threads at ' + server.hostname);
+				ns.print('this should be the only batch of grow()s needed.')
+				ns.print('duration: ' + ns.tFormat(duration));
+				ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
+				await ns.sleep(100);
+			}
+			ns.print('Grow Complete.');
 			gThreadsNeeded = 0;
 		} else {
 			ns.print('running grow.js on home server with ' + gThreadsPossible + ' threads at ' + server.hostname);
 			ns.exec('grow.js', 'home', tThreadsPossible, server.hostname);
-			await ns.sleep(gWaitTime + 200); 
+			let duration = gWaitTime + 100;
+			let expectedEnd = performance.now() + duration;
+			let timeRemaining = expectedEnd - performance.now();
+			while (timeRemaining > 0) {
+				timeRemaining = expectedEnd - performance.now();
+				ns.clearLog();
+				ns.print('running grow.js on home server with ' + gThreadsPossible + ' threads at ' + server.hostname);
+				ns.print('growThreads needed after this round completes: ' + gThreadsNeeded - gThreadsPossible);
+				ns.print('duration: ' + ns.tFormat(duration));
+				ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
+				await ns.sleep(100);
+			}
+			ns.print('Grow Complete.');
 			gThreadsNeeded = gThreadsNeeded - gThreadsPossible;
 		}
-	}	
+	}
 }
 
 async function weakTarget(ns, server) {
@@ -26,11 +51,36 @@ async function weakTarget(ns, server) {
 		if (wThreadsPossible >= wThreadsNeeded) {
 			ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
 			ns.exec('weak.js', 'home', wThreadsNeeded, server.hostname);
+			let duration = wWaitTime + 100;
+			let expectedEnd = performance.now() + duration;
+			let timeRemaining = expectedEnd - performance.now();
+			while (timeRemaining > 0) {
+				timeRemaining = expectedEnd - performance.now();
+				ns.clearLog();
+				ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
+				ns.print('this should be the only batch of weaken()s needed.')
+				ns.print('duration: ' + ns.tFormat(duration));
+				ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
+				await ns.sleep(100);
+			}
+			ns.print('Weaken Complete.');
 			wThreadsNeeded = 0;
 		} else {
 			ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
 			ns.exec('weak.js', 'home', wThreadsPossible, server.hostname);
-			await ns.sleep(wWaitTime + 200);
+			let duration = wWaitTime + 100;
+			let expectedEnd = performance.now() + duration;
+			let timeRemaining = expectedEnd - performance.now();
+			while (timeRemaining > 0) {
+				timeRemaining = expectedEnd - performance.now();
+				ns.clearLog();
+				ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
+				ns.print('weakThreads needed after this round completes: ' + wThreadsNeeded - wThreadsPossible)
+				ns.print('duration: ' + ns.tFormat(duration));
+				ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
+				await ns.sleep(100);
+			}
+			ns.print('Weaken Complete')
 			wThreadsNeeded = wThreadsNeeded - wThreadsPossible;
 		}
 	}
@@ -43,34 +93,23 @@ export async function main(ns) {
 	ns.tail();
 	const target = ns.args[0];
 	let server = ns.getServer(target);
-	let hservr = ns.getServer('home');
 	let curSec = ns.getServerSecurityLevel(server.hostname);
 	let avaMon = ns.getServerMoneyAvailable(server.hostname);
-	let wkTime = ns.getWeakenTime(server.hostname);
-	let gwTime = ns.getGrowTime(server.hostname);
 	while (curSec > server.minDifficulty || avaMon < server.moneyMax) {
-		ns.clearLog();
-		ns.print('server: ' + server.hostname);
-		ns.print('Security: ' + curSec);
-		ns.print('MinSecurity (Want): ' + server.minDifficulty);
-		ns.print('WeakenTime: ' + ns.tFormat(wkTime, true));
-		ns.print('MoneyAvailable: ' + ns.formatNumber(avaMon));
-		ns.print('MoneyMax (Want): ' + ns.formatNumber(server.moneyMax));
-		ns.print('GrowTime: ' + ns.tFormat(gwTime, true));
-		let tCount = Math.floor((ns.getServerMaxRam('home') - ns.getServerUsedRam('home')) / ns.getScriptRam('weak.js'));
 		if (curSec > server.minDifficulty) {
 			await weakTarget(ns, server);
 		}
 		if (avaMon < server.moneyMax) {
 			await growTarget(ns, server);
 		}
-		await ns.sleep(200);
+		await ns.sleep(0);
+
 		server = ns.getServer(target);
 		curSec = ns.getServerSecurityLevel(server.hostname);
 		avaMon = ns.getServerMoneyAvailable(server.hostname);
 		wkTime = ns.getWeakenTime(server.hostname);
 		gwTime = ns.getGrowTime(server.hostname);
 	}
-	ns.print('Target Prepped. Initiate ProtoBatch at the ready');
+	ns.tprint('Target Prepped. Initiate ProtoBatch at the ready');
 
 } //make sure grow.js, weak.js, and hack.js exist.
