@@ -73,4 +73,4 @@ export async function main(ns) {
 	}
 	ns.print('Target Prepped. Initiate ProtoBatch at the ready');
 
-}
+} //make sure grow.js, weak.js, and hack.js exist.
