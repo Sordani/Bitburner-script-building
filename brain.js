@@ -23,10 +23,11 @@ function canHack(ns, server) {
 }
 
 //function to open all the ports on the parameter server.
-function breakingAndEntering(ns, server, portScript) {
+async function breakingAndEntering(ns, server, portScript) {
 	ns.print('breakingAndEntering called');
-	ns.print('ns.getServerNumPortsRequired thinks the server is: ' + server);
+	ns.print('breakingAndEntering thinks the server is: ' + server);
 	ns.exec(portScript, 'home', 1, server);
+	await ns.sleep(100);
 	ns.print('breakingAndEntering applied to ' + server);
 }
 
@@ -53,12 +54,10 @@ function Weight(ns, server) {
 
 //kills the running script and runs new script on parameter server at parameter target.
 function employ(ns, server, paramTarget, virus, virusRam) {
-	ns.print("employ called");
 	if (ns.fileExists(virus, server) == false) { ns.scp(virus, server); }
 	if (ns.scriptRunning(virus, server)) { ns.scriptKill(virus, server); }
 	let maxThreads = Math.floor(ns.getServerMaxRam(server) / virusRam);
 	ns.exec(virus, server, maxThreads, paramTarget);
-	ns.print(virus + ' ran on ' + server + ' with ' + maxThreads + ' threads, with a target of ' + paramTarget);
 }
 
 
@@ -91,11 +90,11 @@ function getBestTarget(ns, serverList) {
 
 //Function to call the results of getServerList() and go item by item through the array
 //to gain root access and utilize the ram if any is available.
-function attack(ns, server, virus, virusRam, portScript) {
+async function attack(ns, server, virus, virusRam, portScript) {
 	let curTar = getServerList(ns);
 	for (let i = 0; i < curTar.length; i++) {
 		if (canHack(ns, curTar[i])) {
-			breakingAndEntering(ns, curTar[i], portScript);
+			await breakingAndEntering(ns, curTar[i], portScript);
 			if (ns.getServerMaxRam(curTar[i]) > virusRam) {
 				employ(ns, curTar[i], server, virus, virusRam);
 			}
@@ -151,25 +150,25 @@ export async function main(ns) {
 	let serverListWeights = updateTarget(ns);
 	let target = getBestTarget(ns, serverListWeights).name;
 	ns.print('Target is now: ' + target);
-	breakingAndEntering(ns, target, portScript);
-	attack(ns, target, virus, virusRam, portScript)
+	await breakingAndEntering(ns, target, portScript);
+	await attack(ns, target, virus, virusRam, portScript)
 	commandPurchasedServers(ns, target, virus, virusRam)
-	homeAttack(ns, target, virus, virusRam, reserveRam);
+	//homeAttack(ns, target, virus, virusRam, reserveRam);
 
 
 	let curTar = target;
 	while (true) {
-		await ns.sleep(10000);
+		await ns.sleep(1000);
 		countPrograms(ns);
 		serverListWeights = updateTarget(ns);
 		let savedTar = getBestTarget(ns, serverListWeights).name;
 		if (curTar == savedTar) continue;
 		curTar = savedTar;
 		ns.print('Target is now: ' + curTar);
-		breakingAndEntering(ns, curTar, portScript);
-		attack(ns, curTar, virus, virusRam);
+		await breakingAndEntering(ns, curTar, portScript);
+		await attack(ns, curTar, virus, virusRam, portScript);
 		commandPurchasedServers(ns, curTar, virus, virusRam)
-		homeAttack(ns, curTar, virus, virusRam, reserveRam);
+		//homeAttack(ns, curTar, virus, virusRam, reserveRam);
 
 	}
 
