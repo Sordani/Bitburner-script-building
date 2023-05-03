@@ -3,6 +3,7 @@ function is_prepped(ns, host) {
     return ns.getServerSecurityLevel(host) <= ns.getServerMinSecurityLevel(host) && ns.getServerMoneyAvailable(host) >= ns.getServerMaxMoney(host);
 }
 
+/** @param {NS} ns */
 export async function main(ns) {
     ns.disableLog('ALL');
     ns.tail();
@@ -40,7 +41,7 @@ export async function main(ns) {
         }
         let weakPID1 = ns.exec("weak.js", "home", wThreads1, target, wk1Delay);
         ns.print(weakPID1);
-        if (weakPID1 == 0) {
+        if (weak1PID == 0) {
             break;
         }
         let growPID = ns.exec("grow.js", "home", gThreads, target, gwDelay);
@@ -50,7 +51,7 @@ export async function main(ns) {
         }
         let weakPID2 = ns.exec("weak.js", "home", wThreads2, target, wk2Delay);
         ns.print(weakPID2);
-        if (weakPID2 == 0) {
+        if (weak2PID == 0) {
             break;
         }
 
@@ -74,6 +75,8 @@ export async function main(ns) {
             timeToStarth = expectedStarth - performance.now();
             timeToStartg = expectedStartg - performance.now();
             ns.clearLog();
+            ns.print('Target: ' + server.hostname);
+            ns.print('Hack amount: ' + greed);
             ns.print('  Item       :  Hack, 1st Weaken, Grow, 2nd Weaken')
             ns.print('HWGW threads : ' + hThreads + ', ' + wThreads1 + ', ' + gThreads + ', ' + wThreads2);
             ns.print('HWGW times   : ' + ns.formatNumber(hkTime, 0, 1000000) + ', ' + ns.formatNumber(wkTime, 0, 1000000) + ', ' + ns.formatNumber(gwTime, 0, 1000000) + ', ' + ns.formatNumber(wkTime, 0, 1000000));
@@ -83,18 +86,17 @@ export async function main(ns) {
             if (timeToStarth > 0) {
                 ns.print('hack will initiate process in: ' + ns.tFormat(timeToStarth));
             } else {
-                ns.print('hack has started and will commit/end in: ' + ns.tFormat(timeRemainingh));
+                ns.print('hack has started.');
             }
-            ns.print('weakPID1: ' + weakPID1);
-            ns.print('1st weaken will commit/end in: ' + ns.tFormat(timeRemainingw1));
+            ns.print('weakPID1: ' + weak1PID);
             ns.print('growPID: ' + growPID);
             if (timeToStartg > 0) {
                 ns.print('grow will initiate process in: ' + ns.tFormat(timeToStartg));
             } else {
-                ns.print('grow has started and will commit/end in ' + ns.tFormat(timeRemainingg));
+                ns.print('grow has started.');
             }
-            ns.print('weakPID2: ' + weakPID2);
-            ns.print('2nd weaken will commit/end in: ' + ns.tFormat(timeRemainingw2));
+            ns.print('weakPID2: ' + weak2PID);
+            ns.print('weakens will apply in: ' + ns.tFormat(timeRemainingw2));
             await ns.sleep(100);
         }
 
