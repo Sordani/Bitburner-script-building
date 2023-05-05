@@ -68,16 +68,6 @@ export function canHack(ns, server) {
 }
 
 /** @param {NS} ns */
-//function to call a script that opens all the ports on the parameter server.
-export async function breakingAndEntering(ns, server) {
-	//script that contains logic to run all port opening programs and nuke.exe.
-	const portScript = 'portopener.js'
-	ns.exec(portScript, 'home', 1, server);
-	await ns.sleep(100);
-	ns.print('root access gained on ' + server);
-}
-
-/** @param {NS} ns */
 // copied this straight from #early-game pinned messages in the bitburner discord. posted by xsinx#1018
 // Returns a weight that can be used to sort servers by hack desirability
 // requires countPrograms
