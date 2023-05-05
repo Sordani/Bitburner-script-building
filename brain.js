@@ -1,5 +1,5 @@
 //importing functions from slibs.js function library for cleanliness.
-import { countPrograms, canHack, getServerList, Weight, updateTarget, getBestTarget, breakingAndEntering } from "slibs.js";
+import { countPrograms, canHack, getServerList, Weight, updateTarget, getBestTarget, getAccess } from "slibs.js";
 
 /**
  * @param {NS} ns
@@ -20,7 +20,6 @@ async function attack(ns, server, virus, virusRam) {
 	let curTar = getServerList(ns);
 	for (let i = 0; i < curTar.length; i++) {
 		if (canHack(ns, curTar[i])) {
-			await breakingAndEntering(ns, curTar[i]);
 			if (ns.getServerMaxRam(curTar[i]) > virusRam) {
 				employ(ns, curTar[i], server, virus, virusRam);
 			}
@@ -70,26 +69,18 @@ export async function main(ns) {
 	const virus = 'early-hack-template.js';
 	const virusRam = ns.getScriptRam(virus);
 	//arbitrary amount of ram to keep open on home computer. required for calling other scripts
-	const reserveRam = 4;
-	let serverListWeights = updateTarget(ns);
-	let target = getBestTarget(ns, serverListWeights).name;
-	ns.print('Target is now: ' + target);
-	await breakingAndEntering(ns, target);
-	await attack(ns, target, virus, virusRam)
-	commandPurchasedServers(ns, target, virus, virusRam)
-	//homeAttack(ns, target, virus, virusRam, reserveRam);
+	//const reserveRam = 4;
 
 
-	let curTar = target;
+	let curTar = 'n00dles'; //this will almost certainly get changed.
 	while (true) {
 		await ns.sleep(1000);
-		countPrograms(ns);
-		serverListWeights = updateTarget(ns);
+		getAccess(ns, getServerList(ns));
+		let serverListWeights = updateTarget(ns);
 		let savedTar = getBestTarget(ns, serverListWeights).name;
 		if (curTar == savedTar) continue;
 		curTar = savedTar;
 		ns.print('Target is now: ' + curTar);
-		await breakingAndEntering(ns, curTar);
 		await attack(ns, curTar, virus, virusRam);
 		commandPurchasedServers(ns, curTar, virus, virusRam)
 		//homeAttack(ns, curTar, virus, virusRam, reserveRam);
