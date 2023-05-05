@@ -121,6 +121,22 @@ export function getServerList(ns) {
 }
 
 /** @param {NS} ns */
+//function to take the list of servers, check if we have root access to them, and if not, gain it.
+//requires countPrograms
+export function getAccess(ns, serverList) {
+	const portScript = 'portopener.js';
+	const filecount = countPrograms(ns);
+	for (let i = 0; i < serverList.length; i++) {
+		if (ns.hasRootAccess(serverList[i])) continue;
+		if (serverList[i] == 'home') continue;
+		if (serverList[i].includes('pserv')) continue;
+		if (filecount < ns.getServerNumPortsRequired(serverList[i])) continue;
+		ns.exec(portScript, 'home', 1, serverList[i]);
+	}
+}
+
+
+/** @param {NS} ns */
 //function to grab list of servers (results from getServerList function) and assigns 
 //hackability weight to them. requires Weight function.
 export function updateTarget(ns) {
@@ -251,3 +267,24 @@ export async function prepTarget(ns, paramServer) {
 		avaMon = ns.getServerMoneyAvailable(server.hostname);
 	}
 }
+
+//don't use this. copied from bitburner discord from jakob'#6443. this requires singularity.
+//figure out what that is before looking/modifying/trying this.
+/*
+export async function installBackdoors(ns) {
+	const allServer = ["home"]
+	for (const server of allServer) {
+		ns.scan(server).forEach((found) => allServer.includes(found) ? null : allServer.push(found))
+	}
+	for (const server of allServer) {
+		if (ns.getServer(server).backdoorInstalled) continue;
+		const path = [server]
+		while (!ns.getServer(path[0]).backdoorInstalled) {
+			path.unshift(ns.scan(path[0])[0])
+		}
+		path.forEach((server) => ns.singularity.connect(server))
+		await ns.singularity.installBackdoor() // or flip flop with await nextWrite to run a new script that backdoors
+	}
+	ns.singularity.connect("home")
+}
+*/
