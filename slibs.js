@@ -246,7 +246,7 @@ export async function prepTarget(ns, paramServer) {
 		}
 		await ns.sleep(0);
 
-		server = ns.getServer(target);
+		server = ns.getServer(paramServer);
 		curSec = ns.getServerSecurityLevel(server.hostname);
 		avaMon = ns.getServerMoneyAvailable(server.hostname);
 	}
