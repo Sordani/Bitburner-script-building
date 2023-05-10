@@ -63,7 +63,7 @@ export async function main(ns) {
 		let batchEnd;
 		let batchCounter = 0;
 
-		while (values.maxBlockSize >= values.batchSize) {
+		while (values.shells > 0) {
 			const jobs = ["weaken2", "grow", "weaken1", "hack"];
 			const offset = values.spacer * batchCounter * 4; // You can see how we'r using the spacer more clearly here.
 			const hEnd = Date.now() + wTime + values.buffer + values.spacer * 1 + offset;
@@ -83,21 +83,23 @@ export async function main(ns) {
 						ns.exec(scripts[job], block.server, threads[job], JSON.stringify(metrics));
 					}
 					block.batchSpace -= 1;
+					batchCounter++
 					if (block.batchSpace === 0) block.used = true;
 				}
 				values.shells -= 1
 			}
 
-			if (batchCounter++ > values.depth * 10) {
+			if (batchCounter > values.depth * 10) { //batchcounter is both incremented AND checked here
 				// Infinite loop safety net. Should never happen unless something goes very wrong.
 				ns.print("ERROR: Infinite loop failsafe triggered.");
 				// If this happens, put your debugging stuff here.
-				ns.print(JSON.stringify(values));
-				ns.print(JSON.stringify(shells));
+				ns.print('values: ' + JSON.stringify(values));
+				ns.print('shells: ' + JSON.stringify(shells));
+				ns.print('batchCounter: ' + batchCounter);
 				return;
 			}
 			batchEnd = wEnd2;
-		} //shotgunwhile ends here
+		}
 		do {
 
 			ns.clearLog();
@@ -105,7 +107,7 @@ export async function main(ns) {
 			ns.print(`Batches deployed: ${batchCounter}`);
 			ns.print(`Target depth: ${Math.floor(values.depth)}`);
 			ns.print(`Greed level: ${Math.round(values.greed * 1000) / 10}%`);
-			ns.print(`RAM allocated: ${threads.hack * 1.7 + (threads.weaken1 + threads.weaken2 + threads.grow) * 1.75 * batchCounter}/${values.totalThreads * 1.75} GBs`);
+			ns.print(`RAM allocated: ${values.hThreads * 1.7 + (values.wThreads1 + values.wThreads2 + values.grow) * 1.75 * batchCounter}/${values.totalThreads * 1.75} GBs`);
 			ns.print(`Expected yield: \$${ns.formatNumber(batchCounter * (ns.hackAnalyze(values.optimalTarget) * values.hThreads) * server.moneyMax * (60000 / (values.spacer * 4 * batchCounter + wTime + values.buffer)), 2)} per minute`);
 			ns.print(`Next batch at ${new Date(batchEnd).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat(batchEnd - Date.now())})`);
 			await dataPort.nextWrite();
