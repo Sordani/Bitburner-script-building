@@ -27,14 +27,14 @@ export function optimizeShotgun(ns, ramNet, values) {
 			values.bestIncome = income;
 			values.greed = greed;
 			values.depth = batchCount;
-		try { 
-			values.hThreads = hThreads;
-			values.gThreads = gThreads;
-			values.wThreads1 = wThreads1;
-			values.wThreads2 = wThreads2;
-			values.batchSize = batchSize;
-		}
-		catch {}
+			try {
+				values.hThreads = hThreads;
+				values.gThreads = gThreads;
+				values.wThreads1 = wThreads1;
+				values.wThreads2 = wThreads2;
+				values.batchSize = batchSize;
+			}
+			catch { }
 		}
 		greed += 0.001;
 	}
@@ -71,6 +71,31 @@ export function buildramNetwork(ns, ramNetwork, paramVal) {
 			}
 		}
 	}
+}
+
+export function protoGreed(ns, values) {
+	const player = ns.getPlayer();
+	let server = ns.getServer(values.optimalTarget);
+	values.maxThreads = Math.floor((ns.getServerMaxRam('home') - ns.getServerUsedRam('home')) / 1.75);
+	while (values.greed >= 0.001) {
+		let greedhackSet = server.moneyMax * values.greed;
+		const greedhthreads = ns.fileExists('formulas.exe') ? Math.ceil(values.greed / (ns.formulas.hacking.hackPercent(server, player))) : Math.max(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, greedhackSet)), 1);
+		const greedgthreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, server.moneyMax / (server.moneyMax - (server.moneyMax * values.greed))));
+		const greedw1threads = Math.max(Math.ceil(greedhthreads * 0.002 / 0.05), 1);
+		const greedw2threads = Math.max(Math.ceil(greedgthreads * 0.004 / 0.05), 1);
+		let threads = greedhthreads + greedgthreads + greedw1threads + greedw2threads;
+
+		if (threads < values.maxThreads) {
+			values.hThreads = greedhthreads;
+			values.gThreads = greedgthreads;
+			values.wThreads1 = greedw1threads;
+			values.wThreads2 = greedw2threads;
+			values.hackSet = greedhackSet;
+			break;
+		}
+		values.greed -= 0.001;
+	}
+
 }
 
 /** @param {NS} ns */
