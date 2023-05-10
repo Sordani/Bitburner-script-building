@@ -1,22 +1,74 @@
 /** @param {NS} ns */
 export async function main(ns) {
-	ns.print('Function library. no functions to run on its own.');
+	ns.print('Function library. Keep this installed. No delete. No disassemble.');
+}
+
+/** @param {NS} ns */
+export function optimizeShotgun(ns, ramNet, values) {
+	const wTime = ns.getWeakenTime(values.optimalTarget);
+	let maxMoney = ns.getServerMaxMoney(values.optimalTarget);
+	let greed = 0.001;
+	let bestIncome = 0;
+	while (greed <= 0.02) {
+		// Simulating all of the threads instead of just growth.
+		const amount = maxMoney * greed;
+		const hThreads = Math.max(Math.min(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, amount)), Math.floor(ramNet.slice(-2)[0].ram / 1.7)), 1);
+		const tAmount = ns.hackAnalyze(values.optimalTarget) * hThreads;
+		const gThreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, maxMoney / (maxMoney - (maxMoney * tAmount))) * 1.01);
+		const wThreads1 = Math.max(Math.ceil(hThreads * 0.002 / 0.05), 1);
+		const wThreads2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
+		const batchSize = hThreads * 1.7 + (gThreads + wThreads1 + wThreads2) * 1.75;
+		const batchCount = Math.floor(values.totalThreads * 1.75 / batchSize);
+		// This formula is where the magic happens. Trying to balance higher income over longer times.
+		const income = tAmount * maxMoney * batchCount / (values.spacer * 4 * batchCount + wTime + values.buffer);
+		// Adjusting values. No need to return anything since maps are passed by reference.
+		if (income > bestIncome) {
+			bestIncome = income;
+			values.bestIncome = income;
+			values.greed = greed;
+			values.depth = batchCount;
+		try { 
+			values.hThreads = hThreads;
+			values.gThreads = gThreads;
+			values.wThreads1 = wThreads1;
+			values.wThreads2 = wThreads2;
+			values.batchSize = batchSize;
+		}
+		catch {}
+		}
+		greed += 0.001;
+	}
+}
+
+/** @param {NS} ns */
+//ramNetwork is the supplied array from buildramNetwork(), values is an object of values, and shells is an empty array.
+export function loadShotgunShells(ns, ramNetwork, values, shells) {
+	for (const block of ramNetwork) {
+		if (block.ram < values.batchSize) continue;
+		block.batchSpace = Math.floor(block.ram / values.batchSize);
+		shells.push(block);
+		values.shots += block.batchSpace
+		values.shells++
+	}
 }
 
 /** @param {NS} ns */
 //function to take a server hostname, an array, and a value defined with minBlockSize and maxBlockSize
 //calculates available ram. will dynamically change based on needs of batcher.
-//pVal is an object consisting of totalThreads, target, maxBlockSize, and minBlockSize
-export function ramCount(ns, server, serverRam, pVal) {
-	if (ns.hasRootAccess(server)) {
-		const ram = ns.getServerMaxRam(server) - ns.getServerUsedRam(server);
-		if (ram >= 1.60) {
-			const block = { server: server, ram: ram, used: false };
-			serverRam.push(block);
-			if (ram < pVal.minBlockSize) pVal.minBlockSize = ram;
-			if (ram > pVal.maxBlockSize) pVal.maxBlockSize = ram;
-			pVal.totalThreads += Math.floor(ram / 1.75);
-			return true;
+//paramVal is an object consisting of totalThreads, target, maxBlockSize, and minBlockSize
+//ramNetwork starts as an empty array and is filled with server nams, rams, and used.
+export function buildramNetwork(ns, ramNetwork, paramVal) {
+	let serverlist = getServerList(ns);
+	for (let i = 0; i < serverlist.length; i++) {
+		if (ns.hasRootAccess(serverlist[i])) {
+			const ram = ns.getServerMaxRam(serverlist[i]); //- ns.getServerUsedRam(serverlist[i]);
+			if (ram >= 1.60) {
+				const block = { server: serverlist[i], ram: ram, batchSpace: 0, used: false };
+				ramNetwork.push(block);
+				if (ram < paramVal.minBlockSize) paramVal.minBlockSize = ram;
+				if (ram > paramVal.maxBlockSize) paramVal.maxBlockSize = ram;
+				paramVal.totalThreads += Math.floor(ram / 1.75);
+			}
 		}
 	}
 }
@@ -113,7 +165,7 @@ export function getServerList(ns) {
 /** @param {NS} ns */
 //function to take the list of servers, check if we have root access to them, and if not, gain it.
 //requires countPrograms
-export function getAccess(ns, serverList) {
+export async function getAccess(ns, serverList) {
 	const portScript = 'portopener.js';
 	const filecount = countPrograms(ns);
 	for (let i = 0; i < serverList.length; i++) {
@@ -122,6 +174,7 @@ export function getAccess(ns, serverList) {
 		if (serverList[i].includes('pserv')) continue;
 		if (filecount < ns.getServerNumPortsRequired(serverList[i])) continue;
 		ns.exec(portScript, 'home', 1, serverList[i]);
+		await ns.sleep(100);
 	}
 }
 
@@ -137,7 +190,7 @@ export function updateTarget(ns) {
 //function that requires the results of updateTarget() and parses 
 // the information to find the highest weighted server name.
 export function getBestTarget(ns, serverList) {
-	return serverList.sort((a, b) => b.score - a.score)[0]
+	return serverList.sort((a, b) => b.score - a.score)[0].name
 }
 
 /** @param {NS} ns */
@@ -154,40 +207,44 @@ export async function prepTarget(ns, paramServer) {
 	const wWaitTime = ns.getWeakenTime(server.hostname);
 	while (curSec > server.minDifficulty || avaMon < server.moneyMax) {
 		if (curSec > server.minDifficulty) {
-			let wThreadsNeeded = Math.ceil((ns.getServerSecurityLevel(server.hostname) - server.minDifficulty) / ns.weakenAnalyze(1) + 0.001);
+			let wThreadsNeeded = Math.ceil((ns.getServerSecurityLevel(paramServer) - server.minDifficulty) / ns.weakenAnalyze(1) + 0.001);
 			while (wThreadsNeeded > 0) {
 				let wThreadsPossible = Math.max(Math.floor((ns.getServerMaxRam('home') - (ns.getServerUsedRam('home') + 4)) / ns.getScriptRam('weak.js')), 1);
 				if (wThreadsPossible >= wThreadsNeeded) {
-					ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
-					ns.exec('weak.js', 'home', wThreadsNeeded, server.hostname);
+					ns.print('running weakprep.js on home server with ' + wThreadsNeeded + ' threads at ' + paramServer);
+					ns.exec('weakprep.js', 'home', wThreadsNeeded, paramServer);
 					let duration = wWaitTime + 100;
 					let expectedEnd = performance.now() + duration;
 					let timeRemaining = expectedEnd - performance.now();
 					while (timeRemaining > 0) {
 						timeRemaining = expectedEnd - performance.now();
 						ns.clearLog();
+						ns.print('prepping server. any problems at this time are in the prep function.');
+						ns.print('weakprep.js was run with the following parameters: "home", ' + wThreadsNeeded + ' and ' + paramServer);
 						ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
 						ns.print('this should be the only batch of weaken()s needed.');
 						ns.print('duration: ' + ns.tFormat(duration));
 						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
-						await ns.sleep(100);
+						await ns.sleep(1000);
 					}
 					ns.print('Weaken Complete.');
 					wThreadsNeeded = 0;
 				} else {
-					ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
-					ns.exec('weak.js', 'home', wThreadsPossible, server.hostname);
+					ns.print('running weakprep.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
+					ns.exec('weakprep.js', 'home', wThreadsPossible, paramServer);
 					let duration = wWaitTime + 100;
 					let expectedEnd = performance.now() + duration;
 					let timeRemaining = expectedEnd - performance.now();
 					while (timeRemaining > 0) {
 						timeRemaining = expectedEnd - performance.now();
 						ns.clearLog();
+						ns.print('prepping server. any problems at this time are in the prep function.');
+						ns.print('weak.js was run with the following parameters: "home", ' + wThreadsPossible + ' and ' + paramServer);
 						ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
 						ns.print('weakThreads needed after this round completes: ' + wThreadsNeeded - wThreadsPossible);
 						ns.print('duration: ' + ns.tFormat(duration));
 						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
-						await ns.sleep(100);
+						await ns.sleep(1000);
 					}
 					ns.print('Weaken Complete')
 					wThreadsNeeded = wThreadsNeeded - wThreadsPossible;
@@ -201,8 +258,8 @@ export async function prepTarget(ns, paramServer) {
 				let wThreads = Math.ceil((gThreadsPossible * 0.004) / 0.05);
 				let gThreads = gThreadsPossible - wThreads;
 				if (gThreads >= gThreadsNeeded) {
-					ns.exec('grow.js', 'home', gThreads, server.hostname);
-					ns.exec('weak.js', 'home', wThreads, server.hostname);
+					ns.exec('growprep.js', 'home', gThreads, paramServer);
+					ns.exec('weakprep.js', 'home', wThreads, paramServer);
 					let durationw = wWaitTime;
 					let durationg = gWaitTime;
 					let expectedEndw = performance.now() + durationw;
@@ -213,20 +270,21 @@ export async function prepTarget(ns, paramServer) {
 						timeRemainingw = expectedEndw - performance.now();
 						timeRemainingg = expectedEndg - performance.now();
 						ns.clearLog();
-						ns.print('running grow.js on home server with ' + gThreads + ' threads at ' + server.hostname);
+						ns.print('prepping server. any problems at this time are in the prep function.');
+						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
 						ns.print('this should be the only batch of grows needed.');
 						ns.print('grow time: ' + ns.tFormat(durationg));
 						ns.print('grow time remaining: ' + ns.tFormat(timeRemainingg));
 						ns.print('countering weaken will take: ' + ns.tFormat(durationw));
 						ns.print('weaken time remaining: ' + ns.tFormat(timeRemainingw));
-						await ns.sleep(100);
+						await ns.sleep(1000);
 					}
 					ns.print('Grow Complete.');
 					gThreadsNeeded = 0;
 				} else {
-					ns.print('running grow.js on home server with ' + gThreads + ' threads at ' + server.hostname);
-					ns.exec('grow.js', 'home', gThreads, server.hostname);
-					ns.exec('weak.js', 'home', wThreads, server.hostname);
+					ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + server.hostname);
+					ns.exec('growprep.js', 'home', gThreads, server.hostname);
+					ns.exec('weakprep.js', 'home', wThreads, server.hostname);
 					let durationw = wWaitTime;
 					let durationg = gWaitTime;
 					let expectedEndw = performance.now() + durationw;
@@ -237,13 +295,14 @@ export async function prepTarget(ns, paramServer) {
 						timeRemainingw = expectedEndw - performance.now();
 						timeRemainingg = expectedEndg - performance.now();
 						ns.clearLog();
-						ns.print('running grow.js on home server with ' + gThreads + ' threads at ' + server.hostname);
+						ns.print('prepping server. any problems at this time are in the prep function.');
+						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
 						ns.print('growThreads needed after this round completes: ' + (gThreadsNeeded - gThreads));
 						ns.print('grow: ' + ns.tFormat(durationg));
 						ns.print('grow completing in: ' + ns.tFormat(timeRemainingg))
 						ns.print('countering weaken will take: ' + ns.tFormat(durationw));
 						ns.print('weaken: ' + ns.tFormat(timeRemainingw));
-						await ns.sleep(100);
+						await ns.sleep(1000);
 					}
 					ns.print('Grow Complete.');
 					gThreadsNeeded = gThreadsNeeded - gThreadsPossible;
@@ -278,3 +337,98 @@ export async function installBackdoors(ns) {
 	ns.singularity.connect("home")
 }
 */
+
+// The recursive server navigation algorithm.
+/** @param {NS} ns */
+export function getServers(ns, lambdaCondition = (ns, server) => true, hostname = "home", servers = [], visited = []) {
+	if (visited.includes(hostname)) return;
+	visited.push(hostname);
+	if (lambdaCondition(ns, hostname)) servers.push(hostname);
+	const connectedNodes = ns.scan(hostname);
+	if (hostname !== "home") connectedNodes.shift();
+	for (const node of connectedNodes) getServers(ns, lambdaCondition, node, servers, visited);
+	return servers;
+}
+
+// Custom predicates
+/** @param {NS} ns */
+export function checkTarget(ns, server, pVal) {
+	if (ns.getServerRequiredHackingLevel(server) <= ns.getHackingLevel() / 2) {
+		const previousScore = ns.getServerMaxMoney(pVal.target) / ns.getServerMinSecurityLevel(pVal.target);
+		const currentScore = ns.getServerMaxMoney(server) / ns.getServerMinSecurityLevel(server);
+		if (currentScore > previousScore) pVal.target = server;
+	}
+}
+
+/** @param {NS} ns */
+export function buildRamNet(ns, server, pRam, pVal) {
+	if (ns.hasRootAccess(server)) {
+		const ram = ns.getServerMaxRam(server) - ns.getServerUsedRam(server);
+		if (ram >= 1.60) {
+			const block = { server: server, ram: ram, used: false };
+			pRam.push(block);
+			if (ram < pVal.minBlockSize) pVal.minBlockSize = ram;
+			if (ram > pVal.maxBlockSize) pVal.maxBlockSize = ram;
+			pVal.totalThreads += Math.floor(ram / 1.75);
+			return true;
+		}
+	}
+}
+
+/** @param {NS} ns */
+export async function expMode(ns) {
+	const portScript = 'portopener.js';
+	if (ns.getHackingLevel() > 100) ns.print('Hacking level above necessary baseline. Make money, Champ.');
+	ns.exec(portScript, 'home', 1, 'joesguns');
+	const ramNetwork = [];
+	const values = {
+		totalThreads: 0,
+		optimalTarget: 'joesguns',
+		maxBlockSize: 0,
+		minBlockSize: Infinity
+	}
+	const wkTime = ns.getWeakenTime(values.optimalTarget);
+	const hkTime = wkTime / 4;
+	const gwTime = hkTime * 3.2;
+	buildramNetwork(ns, ramNetwork, values);
+	const dataPort = ns.getPortHandle(ns.pid);
+	dataPort.clear();
+	while (ns.getServerMinSecurityLevel(values.optimalTarget) < ns.getServerSecurityLevel(values.optimalTarget)) {
+		for (const block of ramNetwork) {
+			const cost = ns.getScriptRam('protoweak.js');
+			if (block.ram / cost >= 1 && !block.used) {
+				const threads = Math.floor(block.ram / cost);
+				const metrics = { target: values.optimalTarget, job: 'weaken', delay: 0, port: ns.pid, portwrite: true };
+				ns.scp('protoweak.js', block.server);
+				ns.exec('protoweak.js', block.server, threads, JSON.stringify(metrics));
+
+				const assigned = threads * ns.getScriptRam('protoweak.js');
+				block.ram -= assigned;
+				block.used = true;
+			}
+		}
+		await dataPort.nextWrite();
+		await ns.sleep(100);
+		buildramNetwork(ns, ramNetwork, values)
+	}
+	while (ns.getHackingLevel() < 100) {
+		for (const block of ramNetwork) {
+			const cost = ns.getScriptRam('protogrow.js');
+			if (block.ram / cost >= 1 && !block.used) {
+				const threads = Math.floor(block.ram / cost);
+				const metrics = { target: values.optimalTarget, job: 'grow', delay: 0, port: ns.pid, portwrite: true };
+				ns.scp('protogrow.js', block.server);
+				ns.exec('protogrow.js', block.server, threads, JSON.stringify(metrics));
+
+				const assigned = threads * ns.getScriptRam('protogrow.js');
+				block.ram -= assigned;
+				block.used = true;
+			}
+		}
+		await dataPort.nextWrite();
+		await ns.sleep(100);
+		buildramNetwork(ns, ramNetwork, values)
+	}
+	ns.tprint('Hacking level sufficient. joesguns should be prepped, and you should be above level 100 hacking. go make money.');
+
+}
