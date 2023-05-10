@@ -1,12 +1,8 @@
 //importing functions from slibs.js function library for cleanliness.
-import { countPrograms, canHack, getServerList, Weight, updateTarget, getBestTarget, getAccess } from "slibs.js";
-
-/**
- * @param {NS} ns
- * @returns {[]string}
- */
+import { expMode, countPrograms, canHack, getServerList, Weight, updateTarget, getBestTarget, getAccess } from "slibs.js";
 
 //kills the running script and runs new script on parameter server at parameter target.
+/** @param {NS} ns */
 function employ(ns, server, paramTarget, virus, virusRam) {
 	if (ns.fileExists(virus, server) == false) { ns.scp(virus, server); }
 	if (ns.scriptRunning(virus, server)) { ns.scriptKill(virus, server); }
@@ -16,6 +12,7 @@ function employ(ns, server, paramTarget, virus, virusRam) {
 
 //Function to call the results of getServerList() and go item by item through the array
 //to gain root access and utilize the ram if any is available.
+/** @param {NS} ns */
 async function attack(ns, server, virus, virusRam) {
 	let curTar = getServerList(ns);
 	for (let i = 0; i < curTar.length; i++) {
@@ -28,7 +25,8 @@ async function attack(ns, server, virus, virusRam) {
 	ns.print('NUKEd servers now directed to hack: ' + server + ' with ' + virus);
 }
 
-//function to direct the purchased servers as well. 
+//function to direct the purchased servers as well.
+/** @param {NS} ns */
 function commandPurchasedServers(ns, server, virus, virusRam) {
 
 	let pServerList = ns.getPurchasedServers();
@@ -49,6 +47,8 @@ function commandPurchasedServers(ns, server, virus, virusRam) {
 
 //function to initialize the home server to use half its ram to use the virus.
 //this helps in the early part of a run especially
+//currently not in use as 'home' is being used for other needs.
+/** @param {NS} ns */
 function homeAttack(ns, server, virus, virusRam, reserveRam) {
 	let homeServer = 'home';
 	if (ns.scriptRunning(virus, homeServer)) {
@@ -57,7 +57,8 @@ function homeAttack(ns, server, virus, virusRam, reserveRam) {
 	let homeRam = (ns.getServerMaxRam(homeServer) - ns.getServerUsedRam(homeServer) - reserveRam);
 	let homeThreads = Math.floor(homeRam / virusRam);
 	ns.exec(virus, homeServer, homeThreads, server);
-	ns.print('Home hacking: ' + server + ' with ' + virus + ', with ' + homeThreads + ' threads.');}
+	ns.print('Home hacking: ' + server + ' with ' + virus + ', with ' + homeThreads + ' threads.');
+}
 
 
 /** @param {NS} ns */
@@ -65,6 +66,11 @@ export async function main(ns) {
 
 	ns.disableLog('ALL');
 	ns.tail();
+	if (ns.getHackingLevel() < 100) {
+		ns.print('starting expmode. set to level 100');
+		await getAccess(ns, getServerList(ns));
+		await expMode(ns)
+	}
 	//moneymaking script. default hack/grow/weaken loop or 'early-hack-template.js'
 	const virus = 'early-hack-template.js';
 	const virusRam = ns.getScriptRam(virus);
@@ -75,9 +81,8 @@ export async function main(ns) {
 	let curTar = 'n00dles'; //this will almost certainly get changed.
 	while (true) {
 		await ns.sleep(1000);
-		getAccess(ns, getServerList(ns));
-		let serverListWeights = updateTarget(ns);
-		let savedTar = getBestTarget(ns, serverListWeights).name;
+		await getAccess(ns, getServerList(ns));
+		let savedTar = getBestTarget(ns, updateTarget(ns));
 		if (curTar == savedTar) continue;
 		curTar = savedTar;
 		ns.print('Target is now: ' + curTar);
