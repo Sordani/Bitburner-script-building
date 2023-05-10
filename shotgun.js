@@ -63,7 +63,7 @@ export async function main(ns) {
 		let batchEnd;
 		let batchCounter = 0;
 
-		while (ramNetwork.reduce((chunks, block) => chunks + Math.floor(block.ram / ((values.gThreads + values.wThreads2) * 1.75)), 0) !== 0) {
+		while (values.maxBlockSize >= values.batchSize) {
 			const jobs = ["weaken2", "grow", "weaken1", "hack"];
 			const offset = values.spacer * batchCounter * 4; // You can see how we'r using the spacer more clearly here.
 			const hEnd = Date.now() + wTime + values.buffer + values.spacer * 1 + offset;
@@ -83,7 +83,6 @@ export async function main(ns) {
 						ns.exec(scripts[job], block.server, threads[job], JSON.stringify(metrics));
 					}
 					block.batchSpace -= 1;
-					batchCounter++
 					if (block.batchSpace === 0) block.used = true;
 				}
 				values.shells -= 1
@@ -98,19 +97,19 @@ export async function main(ns) {
 				return;
 			}
 			batchEnd = wEnd2;
-			do {
-
-				ns.clearLog();
-				ns.print(`Target: ${values.optimalTarget}`);
-				ns.print(`Batches deployed: ${batchCounter}`);
-				ns.print(`Target depth: ${Math.floor(values.depth)}`);
-				ns.print(`Greed level: ${Math.round(values.greed * 1000) / 10}%`);
-				ns.print(`RAM allocated: ${threads.hack * 1.7 + (threads.weaken1 + threads.weaken2 + threads.grow) * 1.75 * batchCounter}/${values.totalThreads * 1.75} GBs`);
-				ns.print(`Expected yield: \$${ns.formatNumber(batchCounter * (ns.hackAnalyze(values.optimalTarget) * values.hThreads) * server.moneyMax * (60000 / (values.spacer * 4 * batchCounter + wTime + values.buffer)), 2)} per minute`);
-				ns.print(`Next batch at ${new Date(batchEnd).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat(batchEnd - Date.now())})`);
-				await dataPort.nextWrite();
-			} while (dataPort.read() !== batchCounter - 1);
 		} //shotgunwhile ends here
+		do {
+
+			ns.clearLog();
+			ns.print(`Target: ${values.optimalTarget}`);
+			ns.print(`Batches deployed: ${batchCounter}`);
+			ns.print(`Target depth: ${Math.floor(values.depth)}`);
+			ns.print(`Greed level: ${Math.round(values.greed * 1000) / 10}%`);
+			ns.print(`RAM allocated: ${threads.hack * 1.7 + (threads.weaken1 + threads.weaken2 + threads.grow) * 1.75 * batchCounter}/${values.totalThreads * 1.75} GBs`);
+			ns.print(`Expected yield: \$${ns.formatNumber(batchCounter * (ns.hackAnalyze(values.optimalTarget) * values.hThreads) * server.moneyMax * (60000 / (values.spacer * 4 * batchCounter + wTime + values.buffer)), 2)} per minute`);
+			ns.print(`Next batch at ${new Date(batchEnd).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat(batchEnd - Date.now())})`);
+			await dataPort.nextWrite();
+		} while (dataPort.read() !== batchCounter - 1);
 
 	}
 }
