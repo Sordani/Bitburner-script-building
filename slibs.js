@@ -1,40 +1,53 @@
 /** @param {NS} ns */
 export async function main(ns) {
 	ns.print('Function library. Keep this installed. No delete. No disassemble.');
+	ns.tprint('Function library. Keep this installed. No delete. No disassemble.');
 }
 
 /** @param {NS} ns */
 export function optimizeShotgun(ns, ramNet, values) {
+	let server = ns.getServer(values.optimalTarget);
+	const homeServer = ns.getServer('home');
 	const wTime = ns.getWeakenTime(values.optimalTarget);
-	let maxMoney = ns.getServerMaxMoney(values.optimalTarget);
 	let greed = 0.001;
 	let bestIncome = 0;
-	while (greed <= 0.02) {
-		// Simulating all of the threads instead of just growth.
-		const amount = maxMoney * greed;
-		const hThreads = Math.max(Math.min(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, amount)), Math.floor(ramNet.slice(-2)[0].ram / 1.7)), 1);
-		const tAmount = ns.hackAnalyze(values.optimalTarget) * hThreads;
-		const gThreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, maxMoney / (maxMoney - (maxMoney * tAmount))) * 1.01);
+	while (greed <= 0.015) {
+		const amount = server.moneyMax * greed;
+		const hThreads = ns.fileExists('formulas.exe') ? Math.ceil(greed / (ns.formulas.hacking.hackPercent(server, player))) : Math.max(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, amount)), 1);
+		const tGreed = ns.hackAnalyze(server.hostname) * hThreads;
+		const gThreads = Math.ceil(ns.growthAnalyze(server.hostname, server.moneyMax / (server.moneyMax - (server.moneyMax * tGreed))) * 1.01);
+		const homegThreads = Math.ceil(ns.growthAnalyze(server.hostname, (server.moneyMax / (server.moneyMax - (server.moneyMax * tGreed))) * 1.01), homeServer.cpuCores);
 		const wThreads1 = Math.max(Math.ceil(hThreads * 0.002 / 0.05), 1);
+		const homewThreads1 = Math.max(Math.ceil(hThreads * 0.002 / ns.weakenAnalyze(1, homeServer.cpuCores)), 1);
 		const wThreads2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
-		const batchSize = hThreads * 1.7 + (gThreads + wThreads1 + wThreads2) * 1.75;
-		const batchCount = Math.floor(values.totalThreads * 1.75 / batchSize);
-		// This formula is where the magic happens. Trying to balance higher income over longer times.
-		const income = tAmount * maxMoney * batchCount / (values.spacer * 4 * batchCount + wTime + values.buffer);
-		// Adjusting values. No need to return anything since maps are passed by reference.
+		const homewThreads2 = Math.max(Math.ceil(homegThreads * 0.004 / ns.weakenAnalyze(1, homeServer.cpuCores)), 1);
+		const batchSize = (hThreads * 1.7) + ((gThreads + wThreads1 + wThreads2) * 1.75);
+		const homebatchSize = (hThreads *1.7) + ((homegThreads + homewThreads1 + homewThreads2) * 1.75);
+		let batchCount = 0;
+		for (const block of ramNet) {
+			if (block.ram < values.batchSize) continue;
+			if (block.server == 'home') { 
+				batchCount += Math.floor(block.ram / homebatchSize);
+				continue;
+			}
+			batchCount += Math.floor(block.ram / batchSize);
+		}
+		const income = (greed * server.moneyMax) * batchCount / (values.spacer * 4 * batchCount + wTime + values.buffer);
 		if (income > bestIncome) {
 			bestIncome = income;
 			values.bestIncome = income;
 			values.greed = greed;
 			values.depth = batchCount;
-			try {
-				values.hThreads = hThreads;
-				values.gThreads = gThreads;
-				values.wThreads1 = wThreads1;
-				values.wThreads2 = wThreads2;
-				values.batchSize = batchSize;
-			}
-			catch { }
+			values.hThreads = hThreads;
+			values.gThreads = gThreads;
+			values.homegThreads = homegThreads;
+			values.wThreads1 = wThreads1;
+			values.homewThreads1 = homewThreads1;
+			values.wThreads2 = wThreads2;
+			values.homewThreads2 = homewThreads2;
+			values.batchSize = batchSize;
+			values.homebatchSize = homebatchSize;
+
 		}
 		greed += 0.001;
 	}
@@ -45,10 +58,17 @@ export function optimizeShotgun(ns, ramNet, values) {
 export function loadShotgunShells(ns, ramNetwork, values, shells) {
 	for (const block of ramNetwork) {
 		if (block.ram < values.batchSize) continue;
+		if (block.server == 'home') {
+			block.batchSpace = Math.floor(block.ram / values.homebatchSize);
+			shells.push(block);
+			values.shots += block.batchSpace;
+			values.shells++;
+			continue;
+		}
 		block.batchSpace = Math.floor(block.ram / values.batchSize);
 		shells.push(block);
-		values.shots += block.batchSpace
-		values.shells++
+		values.shots += block.batchSpace;
+		values.shells++;
 	}
 }
 
@@ -73,15 +93,18 @@ export function buildramNetwork(ns, ramNetwork, paramVal) {
 	}
 }
 
+/** @param {NS} ns */
 export function protoGreed(ns, values) {
 	const player = ns.getPlayer();
 	let server = ns.getServer(values.optimalTarget);
-	values.maxThreads = Math.floor((ns.getServerMaxRam('home') - ns.getServerUsedRam('home')) / 1.75);
-	while (values.greed >= 0.001) {
+	let homeServer = ns.getServer('home');
+	values.maxThreads = Math.floor((ns.getServerMaxRam(homeServer.hostname) - (ns.getServerUsedRam(homeServer.hostname) + 4 )) / 1.75);
+	while (values.greed <= 0.99) {
 		let greedhackSet = server.moneyMax * values.greed;
 		const greedhthreads = ns.fileExists('formulas.exe') ? Math.ceil(values.greed / (ns.formulas.hacking.hackPercent(server, player))) : Math.max(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, greedhackSet)), 1);
-		const greedgthreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, server.moneyMax / (server.moneyMax - (server.moneyMax * values.greed))));
-		const greedw1threads = Math.max(Math.ceil(greedhthreads * 0.002 / 0.05), 1);
+		const tGreed = ns.hackAnalyze(values.optimalTarget) * greedhthreads;
+		const greedgthreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, server.moneyMax / (server.moneyMax - (server.moneyMax * tGreed))) * 1.01);
+		const greedw1threads = Math.max(Math.ceil(greedgthreads * 0.002 / 0.05), 1);
 		const greedw2threads = Math.max(Math.ceil(greedgthreads * 0.004 / 0.05), 1);
 		let threads = greedhthreads + greedgthreads + greedw1threads + greedw2threads;
 
@@ -91,9 +114,9 @@ export function protoGreed(ns, values) {
 			values.wThreads1 = greedw1threads;
 			values.wThreads2 = greedw2threads;
 			values.hackSet = greedhackSet;
-			break;
+
 		}
-		values.greed -= 0.001;
+		values.greed += 0.001;
 	}
 
 }
@@ -225,29 +248,30 @@ export function getBestTarget(ns, serverList) {
 //code not optimized beyond "weaken to minimum security only, then grow with accompanying weakens to mitigate security effects of grow"
 export async function prepTarget(ns, paramServer) {
 	let server = ns.getServer(paramServer);
-	let curSec = ns.getServerSecurityLevel(server.hostname);
-	let avaMon = ns.getServerMoneyAvailable(server.hostname);
+	let homeServer = ns.getServer('home');
 	const player = ns.getPlayer();
 	const gWaitTime = ns.getGrowTime(server.hostname);
 	const wWaitTime = ns.getWeakenTime(server.hostname);
-	while (curSec > server.minDifficulty || avaMon < server.moneyMax) {
-		if (curSec > server.minDifficulty) {
-			let wThreadsNeeded = Math.ceil((ns.getServerSecurityLevel(paramServer) - server.minDifficulty) / ns.weakenAnalyze(1) + 0.001);
+	while (server.hackDifficulty > server.minDifficulty || server.moneyAvailable < server.moneyMax) {
+		server = ns.getServer(paramServer);
+		if (server.hackDifficulty > server.minDifficulty) {
+			let wThreadsNeeded = Math.ceil((server.hackDifficulty - server.minDifficulty) / ns.weakenAnalyze(1) + 0.001);
 			while (wThreadsNeeded > 0) {
 				let wThreadsPossible = Math.max(Math.floor((ns.getServerMaxRam('home') - (ns.getServerUsedRam('home') + 4)) / ns.getScriptRam('weak.js')), 1);
 				if (wThreadsPossible >= wThreadsNeeded) {
-					ns.print('running weakprep.js on home server with ' + wThreadsNeeded + ' threads at ' + paramServer);
-					ns.exec('weakprep.js', 'home', wThreadsNeeded, paramServer);
+					ns.print('running weakprep.js on home server with ' + wThreadsPossible + ' threads at ' + paramServer);
+					ns.exec('weakprep.js', 'home', wThreadsPossible, paramServer);
 					let duration = wWaitTime + 100;
 					let expectedEnd = performance.now() + duration;
 					let timeRemaining = expectedEnd - performance.now();
 					while (timeRemaining > 0) {
 						timeRemaining = expectedEnd - performance.now();
 						ns.clearLog();
+						ns.print('Target server: ' + paramServer);
 						ns.print('prepping server. any problems at this time are in the prep function.');
 						ns.print('weakprep.js was run with the following parameters: "home", ' + wThreadsNeeded + ' and ' + paramServer);
-						ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
-						ns.print('this should be the only batch of weaken()s needed.');
+						ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
+						ns.print('this should be the only batch of weaken()s needed, as the target was ' + wThreadsNeeded + ' threads.');
 						ns.print('duration: ' + ns.tFormat(duration));
 						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
 						await ns.sleep(1000);
@@ -263,23 +287,25 @@ export async function prepTarget(ns, paramServer) {
 					while (timeRemaining > 0) {
 						timeRemaining = expectedEnd - performance.now();
 						ns.clearLog();
+						ns.print('Target server: ' + paramServer);
 						ns.print('prepping server. any problems at this time are in the prep function.');
 						ns.print('weak.js was run with the following parameters: "home", ' + wThreadsPossible + ' and ' + paramServer);
-						ns.print('running weak.js on home server with ' + wThreadsNeeded + ' threads at ' + server.hostname);
+						ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
 						ns.print('weakThreads needed after this round completes: ' + wThreadsNeeded - wThreadsPossible);
 						ns.print('duration: ' + ns.tFormat(duration));
 						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
 						await ns.sleep(1000);
 					}
 					ns.print('Weaken Complete')
-					wThreadsNeeded = wThreadsNeeded - wThreadsPossible;
+					wThreadsNeeded -= wThreadsPossible;
 				}
 			}
 		}
-		if (avaMon < server.moneyMax) {
-			let gThreadsNeeded = ns.fileExists('formulas.exe') ? ns.formulas.hacking.growThreads(server, player, server.moneyMax) : Math.ceil(ns.growthAnalyze(server.hostname, (server.moneyMax / server.moneyAvailable)) + 0.001);
+		if (server.moneyAvailable < server.moneyMax) {
+			server = ns.getServer(paramServer);
+			let gThreadsNeeded = ns.fileExists('formulas.exe') ? ns.formulas.hacking.growThreads(server, player, server.moneyMax) : Math.ceil(ns.growthAnalyze(server.hostname, (server.moneyMax / server.moneyAvailable), homeServer.cpuCores) + 0.001);
 			while (gThreadsNeeded > 0) {
-				let gThreadsPossible = Math.floor((ns.getServerMaxRam('home') - (ns.getServerUsedRam('home') + 4)) / ns.getScriptRam('grow.js'));
+				let gThreadsPossible = Math.floor((homeServer.maxRam - (homeServer.ramUsed + 4)) / ns.getScriptRam('growprep.js'));
 				let wThreads = Math.ceil((gThreadsPossible * 0.004) / 0.05);
 				let gThreads = gThreadsPossible - wThreads;
 				if (gThreads >= gThreadsNeeded) {
@@ -295,9 +321,10 @@ export async function prepTarget(ns, paramServer) {
 						timeRemainingw = expectedEndw - performance.now();
 						timeRemainingg = expectedEndg - performance.now();
 						ns.clearLog();
+						ns.print('Target server: ' + paramServer);
 						ns.print('prepping server. any problems at this time are in the prep function.');
 						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
-						ns.print('this should be the only batch of grows needed.');
+						ns.print('this should be the only batch of grows needed, as the target was ' + gThreadsNeeded);
 						ns.print('grow time: ' + ns.tFormat(durationg));
 						ns.print('grow time remaining: ' + ns.tFormat(timeRemainingg));
 						ns.print('countering weaken will take: ' + ns.tFormat(durationw));
@@ -320,6 +347,7 @@ export async function prepTarget(ns, paramServer) {
 						timeRemainingw = expectedEndw - performance.now();
 						timeRemainingg = expectedEndg - performance.now();
 						ns.clearLog();
+						ns.print('Target server: ' + paramServer);
 						ns.print('prepping server. any problems at this time are in the prep function.');
 						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
 						ns.print('growThreads needed after this round completes: ' + (gThreadsNeeded - gThreads));
@@ -337,8 +365,6 @@ export async function prepTarget(ns, paramServer) {
 		await ns.sleep(0);
 
 		server = ns.getServer(paramServer);
-		curSec = ns.getServerSecurityLevel(server.hostname);
-		avaMon = ns.getServerMoneyAvailable(server.hostname);
 	}
 }
 
