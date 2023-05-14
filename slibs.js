@@ -7,6 +7,7 @@ export async function main(ns) {
 /** @param {NS} ns */
 export function optimizeShotgun(ns, ramNet, values) {
 	let server = ns.getServer(values.optimalTarget);
+	const player = ns.getPlayer();
 	const homeServer = ns.getServer('home');
 	const wTime = ns.getWeakenTime(values.optimalTarget);
 	let greed = 0.001;
@@ -22,11 +23,11 @@ export function optimizeShotgun(ns, ramNet, values) {
 		const wThreads2 = Math.max(Math.ceil(gThreads * 0.004 / 0.05), 1);
 		const homewThreads2 = Math.max(Math.ceil(homegThreads * 0.004 / ns.weakenAnalyze(1, homeServer.cpuCores)), 1);
 		const batchSize = (hThreads * 1.7) + ((gThreads + wThreads1 + wThreads2) * 1.75);
-		const homebatchSize = (hThreads *1.7) + ((homegThreads + homewThreads1 + homewThreads2) * 1.75);
+		const homebatchSize = (hThreads * 1.7) + ((homegThreads + homewThreads1 + homewThreads2) * 1.75);
 		let batchCount = 0;
 		for (const block of ramNet) {
 			if (block.ram < values.batchSize) continue;
-			if (block.server == 'home') { 
+			if (block.server == 'home') {
 				batchCount += Math.floor(block.ram / homebatchSize);
 				continue;
 			}
@@ -98,14 +99,14 @@ export function protoGreed(ns, values) {
 	const player = ns.getPlayer();
 	let server = ns.getServer(values.optimalTarget);
 	let homeServer = ns.getServer('home');
-	values.maxThreads = Math.floor((ns.getServerMaxRam(homeServer.hostname) - (ns.getServerUsedRam(homeServer.hostname) + 4 )) / 1.75);
+	values.maxThreads = Math.floor((ns.getServerMaxRam(homeServer.hostname) - (ns.getServerUsedRam(homeServer.hostname) + 4)) / 1.75);
 	while (values.greed <= 0.99) {
 		let greedhackSet = server.moneyMax * values.greed;
 		const greedhthreads = ns.fileExists('formulas.exe') ? Math.ceil(values.greed / (ns.formulas.hacking.hackPercent(server, player))) : Math.max(Math.floor(ns.hackAnalyzeThreads(values.optimalTarget, greedhackSet)), 1);
 		const tGreed = ns.hackAnalyze(values.optimalTarget) * greedhthreads;
-		const greedgthreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, server.moneyMax / (server.moneyMax - (server.moneyMax * tGreed))) * 1.01);
-		const greedw1threads = Math.max(Math.ceil(greedgthreads * 0.002 / 0.05), 1);
-		const greedw2threads = Math.max(Math.ceil(greedgthreads * 0.004 / 0.05), 1);
+		const greedgthreads = Math.ceil(ns.growthAnalyze(values.optimalTarget, server.moneyMax / (server.moneyMax - (server.moneyMax * tGreed))) * 1.01, homeServer.cpuCores);
+		const greedw1threads = Math.max(Math.ceil(greedgthreads * 0.002 / ns.weakenAnalyze(1, homeServer.cpuCores)), 1);
+		const greedw2threads = Math.max(Math.ceil(greedgthreads * 0.004 / ns.weakenAnalyze(1, homeServer.cpuCores)), 1);
 		let threads = greedhthreads + greedgthreads + greedw1threads + greedw2threads;
 
 		if (threads < values.maxThreads) {
@@ -250,121 +251,88 @@ export async function prepTarget(ns, paramServer) {
 	let server = ns.getServer(paramServer);
 	let homeServer = ns.getServer('home');
 	const player = ns.getPlayer();
-	const gWaitTime = ns.getGrowTime(server.hostname);
-	const wWaitTime = ns.getWeakenTime(server.hostname);
+	const ramNetwork = [];
+	const values = {
+		totalThreads: 0,
+		optimalTarget: server.hostname,
+		maxBlockSize: 0,
+		minBlockSize: Infinity
+	}
+	const wkTime = ns.getWeakenTime(values.optimalTarget);
+	const hkTime = wkTime / 4;
+	const gwTime = hkTime * 3.2;
+	buildramNetwork(ns, ramNetwork, values);
+	const dataPort = ns.getPortHandle(ns.pid);
+	dataPort.clear();
 	while (server.hackDifficulty > server.minDifficulty || server.moneyAvailable < server.moneyMax) {
 		server = ns.getServer(paramServer);
+		let wThreadsNeeded = Math.ceil((server.hackDifficulty - server.minDifficulty) / 0.05 + 0.001);
+		let wThreadsPossible = 0;
 		if (server.hackDifficulty > server.minDifficulty) {
-			let wThreadsNeeded = Math.ceil((server.hackDifficulty - server.minDifficulty) / ns.weakenAnalyze(1) + 0.001);
-			while (wThreadsNeeded > 0) {
-				let wThreadsPossible = Math.max(Math.floor((ns.getServerMaxRam('home') - (ns.getServerUsedRam('home') + 4)) / ns.getScriptRam('weak.js')), 1);
-				if (wThreadsPossible >= wThreadsNeeded) {
-					ns.print('running weakprep.js on home server with ' + wThreadsPossible + ' threads at ' + paramServer);
-					ns.exec('weakprep.js', 'home', wThreadsPossible, paramServer);
-					let duration = wWaitTime + 100;
-					let expectedEnd = performance.now() + duration;
-					let timeRemaining = expectedEnd - performance.now();
-					while (timeRemaining > 0) {
-						timeRemaining = expectedEnd - performance.now();
-						ns.clearLog();
-						ns.print('Target server: ' + paramServer);
-						ns.print('prepping server. any problems at this time are in the prep function.');
-						ns.print('weakprep.js was run with the following parameters: "home", ' + wThreadsNeeded + ' and ' + paramServer);
-						ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
-						ns.print('this should be the only batch of weaken()s needed, as the target was ' + wThreadsNeeded + ' threads.');
-						ns.print('duration: ' + ns.tFormat(duration));
-						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
-						await ns.sleep(1000);
+			while (server.hackDifficulty > server.minDifficulty) { //pasted block
+				const metrics = { target: values.optimalTarget, job: 'weaken', delay: 0, port: ns.pid, portwrite: true };
+				for (const block of ramNetwork) {
+					const cost = ns.getScriptRam('protoweak.js');
+					if (block.ram / cost >= 1 && !block.used) {
+						const threads = Math.floor(block.ram / cost);
+						ns.scp('protoweak.js', block.server);
+						ns.exec('protoweak.js', block.server, threads, JSON.stringify(metrics));
+
+						const assigned = threads * ns.getScriptRam('protoweak.js');
+						wThreadsPossible += threads;
+						block.ram -= assigned;
+						block.used = true;
 					}
-					ns.print('Weaken Complete.');
-					wThreadsNeeded = 0;
-				} else {
-					ns.print('running weakprep.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
-					ns.exec('weakprep.js', 'home', wThreadsPossible, paramServer);
-					let duration = wWaitTime + 100;
-					let expectedEnd = performance.now() + duration;
-					let timeRemaining = expectedEnd - performance.now();
-					while (timeRemaining > 0) {
-						timeRemaining = expectedEnd - performance.now();
-						ns.clearLog();
-						ns.print('Target server: ' + paramServer);
-						ns.print('prepping server. any problems at this time are in the prep function.');
-						ns.print('weak.js was run with the following parameters: "home", ' + wThreadsPossible + ' and ' + paramServer);
-						ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
-						ns.print('weakThreads needed after this round completes: ' + wThreadsNeeded - wThreadsPossible);
-						ns.print('duration: ' + ns.tFormat(duration));
-						ns.print('timeRemaining: ' + ns.tFormat(timeRemaining));
-						await ns.sleep(1000);
-					}
-					ns.print('Weaken Complete')
-					wThreadsNeeded -= wThreadsPossible;
 				}
-			}
+				ns.print('Target server: ' + paramServer);
+				ns.print('prepping server. any problems at this time are in the prep function.');
+				ns.print('weakprep.js was run with the following parameters: ' + JSON.stringify(metrics));
+				ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
+				ns.print('the target was ' + wThreadsNeeded + ' threads.');
+				ns.print(`Next action available at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
+				await dataPort.nextWrite();
+				await ns.sleep(100);
+				server = ns.getServer(paramServer);
+				buildramNetwork(ns, ramNetwork, values)
+			} //pasted block
 		}
 		if (server.moneyAvailable < server.moneyMax) {
 			server = ns.getServer(paramServer);
-			let gThreadsNeeded = ns.fileExists('formulas.exe') ? ns.formulas.hacking.growThreads(server, player, server.moneyMax) : Math.ceil(ns.growthAnalyze(server.hostname, (server.moneyMax / server.moneyAvailable), homeServer.cpuCores) + 0.001);
-			while (gThreadsNeeded > 0) {
-				let gThreadsPossible = Math.floor((homeServer.maxRam - (homeServer.ramUsed + 4)) / ns.getScriptRam('growprep.js'));
-				let wThreads = Math.ceil((gThreadsPossible * 0.004) / 0.05);
-				let gThreads = gThreadsPossible - wThreads;
-				if (gThreads >= gThreadsNeeded) {
-					ns.exec('growprep.js', 'home', gThreads, paramServer);
-					ns.exec('weakprep.js', 'home', wThreads, paramServer);
-					let durationw = wWaitTime;
-					let durationg = gWaitTime;
-					let expectedEndw = performance.now() + durationw;
-					let expectedEndg = performance.now() + durationg;
-					let timeRemainingw = expectedEndw - performance.now();
-					let timeRemainingg = expectedEndg - performance.now();
-					while (timeRemainingw > 0) {
-						timeRemainingw = expectedEndw - performance.now();
-						timeRemainingg = expectedEndg - performance.now();
-						ns.clearLog();
-						ns.print('Target server: ' + paramServer);
-						ns.print('prepping server. any problems at this time are in the prep function.');
-						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
-						ns.print('this should be the only batch of grows needed, as the target was ' + gThreadsNeeded);
-						ns.print('grow time: ' + ns.tFormat(durationg));
-						ns.print('grow time remaining: ' + ns.tFormat(timeRemainingg));
-						ns.print('countering weaken will take: ' + ns.tFormat(durationw));
-						ns.print('weaken time remaining: ' + ns.tFormat(timeRemainingw));
-						await ns.sleep(1000);
+			let gThreadsNeeded = ns.fileExists('formulas.exe') ? ns.formulas.hacking.growThreads(server, player, server.moneyMax) : Math.ceil(ns.growthAnalyze(server.hostname, (server.moneyMax / server.moneyAvailable)) + 0.001);
+			let gThreadsPossible = 0;
+			while (server.moneyAvailable < server.moneyMax) {
+				const gmetrics = { target: values.optimalTarget, job: 'grow', delay: 0, port: ns.pid, portwrite: false };
+				const wmetrics = { target: values.optimalTarget, job: 'weaken', delay: 0, port: ns.pid, portwrite: true };
+				for (const block of ramNetwork) {
+					const cost = ns.getScriptRam('protoweak.js');
+					if (block.ram / cost >= 1 && !block.used) {
+						const threads = Math.floor(block.ram / cost);
+						const wthreads = Math.ceil(threads / 13);
+						const gthreads = threads - wthreads
+						ns.scp('protogrow.js', block.server);
+						ns.exec('protogrow.js', block.server, gthreads, JSON.stringify(gmetrics));
+						ns.scp('protoweak.js', block.server);
+						ns.exec('protoweak.js', block.server, wthreads, JSON.stringify(wmetrics));
+						const assigned = threads * ns.getScriptRam('protoweak.js');
+						gThreadsPossible += gthreads;
+						block.ram -= assigned;
+						block.used = true;
 					}
-					ns.print('Grow Complete.');
-					gThreadsNeeded = 0;
-				} else {
-					ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + server.hostname);
-					ns.exec('growprep.js', 'home', gThreads, server.hostname);
-					ns.exec('weakprep.js', 'home', wThreads, server.hostname);
-					let durationw = wWaitTime;
-					let durationg = gWaitTime;
-					let expectedEndw = performance.now() + durationw;
-					let expectedEndg = performance.now() + durationg;
-					let timeRemainingw = expectedEndw - performance.now();
-					let timeRemainingg = expectedEndg - performance.now();
-					while (timeRemainingw > 0) {
-						timeRemainingw = expectedEndw - performance.now();
-						timeRemainingg = expectedEndg - performance.now();
-						ns.clearLog();
-						ns.print('Target server: ' + paramServer);
-						ns.print('prepping server. any problems at this time are in the prep function.');
-						ns.print('running growprep.js on home server with ' + gThreads + ' threads at ' + paramServer);
-						ns.print('growThreads needed after this round completes: ' + (gThreadsNeeded - gThreads));
-						ns.print('grow: ' + ns.tFormat(durationg));
-						ns.print('grow completing in: ' + ns.tFormat(timeRemainingg))
-						ns.print('countering weaken will take: ' + ns.tFormat(durationw));
-						ns.print('weaken: ' + ns.tFormat(timeRemainingw));
-						await ns.sleep(1000);
-					}
-					ns.print('Grow Complete.');
-					gThreadsNeeded = gThreadsNeeded - gThreadsPossible;
 				}
+				ns.print('Target server: ' + values.optimalTarget);
+				ns.print('prepping server. any problems at this time are in the prep function.');
+				ns.print('growprep.js was run with the following parameters: ' + JSON.stringify(gmetrics));
+				ns.print('weakprep.js was run with the following parameters: ' + JSON.stringify(wmetrics));
+				ns.print('running growprep.js on home server with ' + gThreadsPossible + ' threads at ' + values.optimalTarget);
+				ns.print('the target was ' + wThreadsNeeded + ' threads.');
+				ns.print(`Next action available at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
+				await dataPort.nextWrite();
+				await ns.sleep(100);
+				server = ns.getServer(paramServer);
+				buildramNetwork(ns, ramNetwork, values)
 			}
-		}
-		await ns.sleep(0);
 
-		server = ns.getServer(paramServer);
+		}
 	}
 }
 
@@ -458,6 +426,7 @@ export async function expMode(ns) {
 				block.used = true;
 			}
 		}
+		ns.print(`Next batch at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
 		await dataPort.nextWrite();
 		await ns.sleep(100);
 		buildramNetwork(ns, ramNetwork, values)
@@ -476,6 +445,7 @@ export async function expMode(ns) {
 				block.used = true;
 			}
 		}
+		ns.print(`Next batch at ${new Date(Date.now() + gwTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + gwTime) - Date.now())})`);
 		await dataPort.nextWrite();
 		await ns.sleep(100);
 		buildramNetwork(ns, ramNetwork, values)
