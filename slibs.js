@@ -287,9 +287,9 @@ export async function prepTarget(ns, paramServer) {
 				ns.print('Target server: ' + paramServer);
 				ns.print('prepping server. any problems at this time are in the prep function.');
 				ns.print('weakprep.js was run with the following parameters: ' + JSON.stringify(metrics));
-				ns.print('running weak.js on home server with ' + wThreadsPossible + ' threads at ' + server.hostname);
-				ns.print('the target was ' + wThreadsNeeded + ' threads.');
-				ns.print(`Next action available at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
+				ns.print('running weak.js with ' + wThreadsPossible);
+				ns.print('Threads needed: ' + wThreadsNeeded);
+				ns.print(`Completing at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
 				await dataPort.nextWrite();
 				await ns.sleep(100);
 				server = ns.getServer(paramServer);
@@ -323,9 +323,9 @@ export async function prepTarget(ns, paramServer) {
 				ns.print('prepping server. any problems at this time are in the prep function.');
 				ns.print('growprep.js was run with the following parameters: ' + JSON.stringify(gmetrics));
 				ns.print('weakprep.js was run with the following parameters: ' + JSON.stringify(wmetrics));
-				ns.print('running growprep.js on home server with ' + gThreadsPossible + ' threads at ' + values.optimalTarget);
-				ns.print('the target was ' + wThreadsNeeded + ' threads.');
-				ns.print(`Next action available at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
+				ns.print('running growprep.js with ' + gThreadsPossible + ' threads');
+				ns.print('Threads needed: ' + gThreadsNeeded);
+				ns.print(`Next action at ${new Date(Date.now() + wkTime).toLocaleTimeString(undefined, { hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} (~${ns.tFormat((Date.now() + wkTime) - Date.now())})`);
 				await dataPort.nextWrite();
 				await ns.sleep(100);
 				server = ns.getServer(paramServer);
