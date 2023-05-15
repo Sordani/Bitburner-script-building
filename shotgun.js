@@ -3,8 +3,9 @@ import { buildramNetwork, solveGrow, isPrepped, prepTarget, countPrograms, Weigh
 
 /** @param {NS} ns */
 export async function main(ns) {
-	ns.disableLog("ALL");
+	//ns.disableLog("ALL");
 	ns.tail();
+	ns.moveTail(1000, 200);
 	const dataPort = ns.getPortHandle(ns.pid);
 	dataPort.clear();
 
@@ -23,10 +24,11 @@ export async function main(ns) {
 		optimalTarget: 'n00dles',
 		maxBlockSize: 0,
 		minBlockSize: Infinity,
-		depth: 0,
 		spacer: 5,
 		buffer: 2000,
+		bestIncome: 0,
 		greed: 0,
+		depth: 0,
 		hThreads: 0,
 		gThreads: 0,
 		homegThreads: 0,
@@ -39,27 +41,36 @@ export async function main(ns) {
 		shots: 0,
 		shells: 0
 	}
+	ns.writePort(logPort, 'building ramNetwork');
+	await ns.sleep(1000);
 
 	buildramNetwork(ns, ramNetwork, values);
 	//values.optimalTarget = getBestTarget(ns, updateTarget(ns)); //best target
 	values.optimalTarget = 'joesguns'; //test target
+	ns.writePort(logPort, 'prep-check - line 48 shotgun.js');
+	await ns.sleep(1000);
 
 	if (!isPrepped(ns, values.optimalTarget)) {
 		while (isPrepped(ns, values.optimalTarget) == false) {
+			ns.print("awaiting prepTarget");
 			await prepTarget(ns, values.optimalTarget);
+			ns.print("should be done with prepTarget");
+			await ns.sleep(1000);
 		}
 	}
-
+	await ns.sleep(1000);
+	ns.print('optimizeShotguncall - line 59 shotgun.js');
 	optimizeShotgun(ns, ramNetwork, values);
-
+	await ns.sleep(1000);
 	const server = ns.getServer(values.optimalTarget);
 	const player = ns.getPlayer();
 	const shells = []; //new array of blocks from ramNetwork that will contain batchspace value
-
+	ns.print('loadShotgunShells call - line 65 shotgun.js');
 	loadShotgunShells(ns, ramNetwork, values, shells); //function that fills shells
 	shells.sort((x, y) => x.batchSpace - y.batchSpace); //sorts from smallest to largest
 	ns.writePort(logPort, JSON.stringify(values));
 	ns.writePort(logPort, JSON.stringify(shells));
+	await ns.sleep(1000);
 
 	const wTime = ns.getWeakenTime(values.optimalTarget);
 	const hTime = wTime / 4;
@@ -70,6 +81,7 @@ export async function main(ns) {
 	let batchCounter = 0;
 
 
+	while (shells.length > 0) {
 		const jobs = ["weaken2", "grow", "weaken1", "hack"];
 		const offset = values.spacer * batchCounter * 4; // You can see how we'r using the spacer more clearly here.
 		const hEnd = Date.now() + wTime + values.buffer + values.spacer * 1 + offset;
@@ -81,50 +93,34 @@ export async function main(ns) {
 		const scripts = { hack: "hack.js", weaken1: "weak.js", grow: "grow.js", weaken2: "weak.js" };
 		const threads = { hack: values.hThreads, weaken1: values.wThreads1, grow: values.gThreads, weaken2: values.wThreads2 };
 		const homethreads = { hack: values.hThreads, weaken1: values.homewThreads1, grow: values.homegThreads, weaken2: values.homewThreads2 };
-
-		for (const block of shells) {
-			while (block.batchSpace > 0) {
-				for (const job of jobs) {
-					const metrics = { batch: batchCounter, target: values.optimalTarget, job: job, time: times[job], end: ends[job], port: ns.pid, log: logPort };
-					ns.scp(scripts[job], block.server);
-					if (block.server == 'home') {
-						ns.exec(scripts[job], block.server, homethreads[job], JSON.stringify(metrics));
-						continue;
-					}
-					ns.exec(scripts[job], block.server, threads[job], JSON.stringify(metrics));
-				}
-				block.batchSpace -= 1;
-				if (batchCounter++ > values.depth * 10) { //batchcounter is both incremented AND checked here
-					// Infinite loop safety net. Should never happen unless something goes very wrong.
-					ns.print("ERROR: Infinite loop failsafe triggered.");
-					// If this happens, put your debugging stuff here.
-					ns.print('values: ' + JSON.stringify(values));
-					ns.print('shells: ' + JSON.stringify(shells));
-					ns.print('batchCounter: ' + batchCounter);
-					ns.print('this happened inside the while (block.batchSpace > 0) loop');
-					return;
-
-				}
-				if (block.batchSpace === 0) {
-					block.used = true;
-				}
+		ns.print('beginning shell batch for loop.');
+		for (const job of jobs) {
+			const metrics = { batch: batchCounter, target: values.optimalTarget, job: job, time: times[job], end: ends[job], port: ns.pid, log: logPort };
+			ns.scp(scripts[job], shells[0].server);
+			if (shells[0].server == 'home') {
+				ns.exec(scripts[job], shells[0].server, homethreads[job], JSON.stringify(metrics));
+				continue;
 			}
-			if (values.shells-- < 0) {
-				// Infinite loop safety net. Should never happen unless something goes very wrong.
-				ns.print("ERROR: Infinite loop failsafe triggered.");
-				// If this happens, put your debugging stuff here.
-				ns.print('values: ' + JSON.stringify(values));
-				ns.print('shells: ' + JSON.stringify(shells));
-				ns.print('batchCounter: ' + batchCounter);
-				ns.print('this happened inside the for (const block of shells) loop')
-				return;
-
-			}
-
+			ns.exec(scripts[job], shells[0].server, threads[job], JSON.stringify(metrics));
+		}
+		if (batchCounter++ > values.depth) {
+			ns.print("ERROR: Infinite loop failsafe triggered.");
+			ns.print('shells: ' + JSON.stringify(shells));
+			ns.print('values: ' + JSON.stringify(values));
+			ns.print('batchCounter: ' + batchCounter);
+			ns.print('this happened inside the while (block.batchSpace > 0) loop');
+			ns.exit();
+		}
+		shells[0].batchSpace--;
+		if (shells[0].batchSpace === 0) {
+			shells.shift;
+			ns.print('shell ejected. loading shot ' + batchCounter);
 		}
 
-		batchEnd = wEnd2;
-	
+	}
+
+	batchEnd = wEnd2;
+
 	do {
 
 		ns.clearLog();
@@ -138,5 +134,5 @@ export async function main(ns) {
 		await dataPort.nextWrite();
 	} while (dataPort.read() !== batchCounter - 1);
 
-	//}
+	//} //while true wraparound to the whole thing once it's working
 }
