@@ -2,6 +2,7 @@
 /** @param {NS} ns */
 function coffeeParty(ns, agriName) {
 	for (const city of ns.corporation.getDivision(agriName).cities) {
+		const office = ns.corporation.getOffice(agriName, city);
 		if (office.avgEne < 95) ns.corporation.buyCoffee(agriName, city)
 		if (office.avgHAP < 95 || office.avgMor < 95) ns.corporation.throwParty(agriName, city, 500_000)
 	}
