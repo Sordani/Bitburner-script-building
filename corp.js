@@ -313,6 +313,7 @@ export class Business {
 
 /** @param {NS} ns */
 export async function main(ns) {
+	ns.disableLog("ALL");
 	ns.tail();
 	const bus = new Business(ns);
 	bus.checkStage(); //function to figure out what stage/stage the corp is at
