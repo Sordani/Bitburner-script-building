@@ -40,8 +40,8 @@ export class Business {
 	coffeeParty() {
 		for (const city of this.ns.corporation.getDivision(this.agriName).cities) {
 			const office = this.ns.corporation.getOffice(this.agriName, city);
-			if (office.avgEne < 98) this.ns.corporation.buyCoffee(this.agriName, city)
-			if (office.avgHAP < 98 || office.avgMor < 98) this.ns.corporation.throwParty(this.agriName, city, 500_000)
+			if (office.avgEne < 98) { this.ns.corporation.buyCoffee(this.agriName, city); }
+			if (office.avgHAP < 98 || office.avgMor < 98) { this.ns.corporation.throwParty(this.agriName, city, 500_000); }
 		}
 	}
 
