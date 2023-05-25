@@ -31,12 +31,17 @@ export class Business {
 		this.stage = [0, 0]; //stage, step
 	}
 
+	//sets stage to appropriate step
+	setStage() {
+		//this.stage should be incremented based on existing data checks.
+	}
+
 	//Coffee and Party function
 	coffeeParty() {
 		for (const city of this.ns.corporation.getDivision(this.agriName).cities) {
 			const office = this.ns.corporation.getOffice(this.agriName, city);
-			if (office.avgEne < 95) this.ns.corporation.buyCoffee(this.agriName, city)
-			if (office.avgHAP < 95 || office.avgMor < 95) this.ns.corporation.throwParty(this.agriName, city, 500_000)
+			if (office.avgEne < 98) this.ns.corporation.buyCoffee(this.agriName, city)
+			if (office.avgHAP < 98 || office.avgMor < 98) this.ns.corporation.throwParty(this.agriName, city, 500_000)
 		}
 	}
 
@@ -70,7 +75,7 @@ export class Business {
 				this.employeeSatisfactionCheck(); //stage 5
 				break;
 			case 6:
-				if (this.stage[1] == 0) this.ns.print("Buying secont production multiplier material batch");
+				if (this.stage[1] == 0) this.ns.print("Buying second production multiplier material batch");
 				this.purchaseMaterials(1); //stage 6
 				break;
 			case 7:
@@ -103,15 +108,15 @@ export class Business {
 	//Corp initialization. Creating the corp, expanding to agriculture and its' cities,
 	//hiring and assigning in thosecities and buying some upgrades
 	startstuff() {
-		this.ns.corporation.createCorporation(this.corpName, false);
-		this.ns.corporation.createCorporation(this.corpName, true);
+		if (!this.ns.corporation.hasCorporation()) { this.ns.corporation.createCorporation(this.corpName, false); }
+		if (!this.ns.corporation.hasCorporation()) { this.ns.corporation.createCorporation(this.corpName); }
 		this.ns.corporation.expandIndustry("Agriculture", this.agriName);
-		this.ns.corporation.unlockUpgrade("Smart Supply");
+		if (!this.ns.corporation.hasUnlockUpgrade("Smart Supply")) {this.ns.corporation.unlockUpgrade("Smart Supply"); }
 
 		for (let city of this.cities) {
 			if (city != this.cities[5]) {
 				this.ns.corporation.expandCity(this.agriName, city);
-				this.ns.corporation.purchaseWarehouse(this.agriName, city);
+				if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
 			}
 			this.ns.corporation.setSmartSupply(this.agriName, city, true);
 			while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //apparently this works
@@ -167,11 +172,11 @@ export class Business {
 		}
 		this.ns.clearLog();
 		this.ns.print("waiting for employee stats to rise");
-		this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/97");
-		this.ns.print("avg happiness: " + (avgs[1] / 6).toFixed(3) + "/97");
-		this.ns.print("   avg energy: " + (avgs[2] / 6).toFixed(3) + "/97");
+		this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/98");
+		this.ns.print("avg happiness: " + (avgs[1] / 6).toFixed(3) + "/98");
+		this.ns.print("   avg energy: " + (avgs[2] / 6).toFixed(3) + "/98");
 		this.stage[1]++;
-		if (avgs[0] / 6 >= 97 && avgs[1] / 6 >= 97 && avgs[2] / 6 >= 97 && this.stage[1] > 0) { this.stage[0] += 1; this.stage[1] = 0; }
+		if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && avgs[2] / 6 >= 98 && this.stage[1] > 0) { this.stage[0] += 1; this.stage[1] = 0; }
 	}
 
 	//Reassigning the employess so that nobody works in R&D
@@ -217,10 +222,16 @@ export class Business {
 		}
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
-				this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3);
-				while (this.ns.corporation.hireEmployee(this.agriName, city)) { };
-				const jobAssign = [1, 1, 1, 1, 5];
+				this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3); // this works
+				while (this.ns.corporation.hireEmployee(this.agriName, city)) { }; // this works
+				/*const jobAssign = [1, 1, 1, 1, 5]; //this or the below doesn't work
 				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]); }
+				*/
+				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[0], 1)
+				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[1], 1)
+				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[2], 1)
+				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[3], 1)
+				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[4], 5)
 			}
 		}
 
@@ -260,7 +271,9 @@ export class Business {
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
 				if (city == this.cities[0]) continue;
-				this.ns.corporation.expandCity(this.tobaccoName, city);
+				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) { 
+					this.ns.corporation.expandCity(this.tobaccoName, city);
+				}
 				this.ns.corporation.purchaseWarehouse(this.tobaccoName, city);
 				this.ns.corporation.upgradeOfficeSize(this.tobaccoName, city, 3);
 				while (this.ns.corporation.hireEmployee(this.tobaccoName, city)) { }
