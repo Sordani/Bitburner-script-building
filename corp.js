@@ -75,7 +75,7 @@ export class Business {
 				break;
 			case 7:
 				if (this.stage[1] == 0) this.ns.print("Reassign employees");
-				this.reAssignEmployees(); //stage 7
+				this.reAssignEmployees(1); //stage 7
 				break;
 			case 8:
 				if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
@@ -103,8 +103,8 @@ export class Business {
 	//Corp initialization. Creating the corp, expanding to agriculture and its' cities,
 	//hiring and assigning in thosecities and buying some upgrades
 	startstuff() {
-		try { this.ns.corporation.createCorporation(this.corpName, false); } catch { }
-		try { this.ns.corporation.createCorporation(this.corpName, true); } catch { }
+		this.ns.corporation.createCorporation(this.corpName, false);
+		this.ns.corporation.createCorporation(this.corpName, true);
 		this.ns.corporation.expandIndustry("Agriculture", this.agriName);
 		this.ns.corporation.unlockUpgrade("Smart Supply");
 
@@ -128,7 +128,7 @@ export class Business {
 
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
-				try { this.ns.corporation.upgradeWarehouse(this.agriName, city, 1); } catch { }
+				this.ns.corporation.upgradeWarehouse(this.agriName, city, 1);
 			}
 		}
 		this.stage[0] += 1;
@@ -163,7 +163,7 @@ export class Business {
 			avgs[0] += this.ns.corporation.getOffice(this.agriName, city).avgMor;
 			avgs[1] += this.ns.corporation.getOffice(this.agriName, city).avgHap;
 			avgs[2] += this.ns.corporation.getOffice(this.agriName, city).avgEne;
-            
+
 		}
 		this.ns.clearLog();
 		this.ns.print("waiting for employee stats to rise");
@@ -209,26 +209,24 @@ export class Business {
 
 	//buy more upgrades, office space, and warehouse space
 	upgradeStuff() {
-		try { this.ns.corporation.levelUpgrade(this.lvlUps[1]); } catch { }
-		try { this.ns.corporation.levelUpgrade(this.lvlUps[1]); } catch { }
+		this.ns.corporation.levelUpgrade(this.lvlUps[1]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[1]);
 		for (let i = 0; i < 8; i++) {
-			try { this.ns.corporation.levelUpgrade(this.lvlUps[0]); } catch { }
-			try { this.ns.corporation.levelUpgrade(this.lvlUps[1]); } catch { }
+			this.ns.corporation.levelUpgrade(this.lvlUps[0]);
+			this.ns.corporation.levelUpgrade(this.lvlUps[1]);
 		}
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
-				try {
-					this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3);
-					while (this.ns.corporation.hireEmployee(this.agriName, city)) { };
-					const jobAssign = [1, 1, 1, 1, 5];
-					for (let i = 0; i < jobAssign.length; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]);	}
-				} catch { }
+				this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3);
+				while (this.ns.corporation.hireEmployee(this.agriName, city)) { };
+				const jobAssign = [1, 1, 1, 1, 5];
+				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]); }
 			}
 		}
 
 		for (let i = 0; i < 7; i++) {
 			for (let city of this.cities) {
-				try { this.ns.corporation.upgradeWarehouse(this.agriName, city, 1); } catch { }
+				this.ns.corporation.upgradeWarehouse(this.agriName, city, 1);
 			}
 		}
 		this.stage[0] += 1;
@@ -239,7 +237,7 @@ export class Business {
 	lastAGUpgrades() {
 		for (let i = 0; i < 9; i++) {
 			for (let city of this.cities) {
-				try { this.ns.corporation.upgradeWarehouse(this.agriName, city, 1); } catch { }
+				this.ns.corporation.upgradeWarehouse(this.agriName, city, 1);
 			}
 		}
 		this.stage[0] += 1;
@@ -251,55 +249,43 @@ export class Business {
 		try { this.ns.corporation.expandIndustry("Tobacco", this.tobaccoName); } catch { this.ns.tprint("Couldn't expand.. no money"); ns.exit(); }
 		this.ns.corporation.expandCity(this.tobaccoName, this.cities[0]);
 		this.ns.corporation.purchaseWarehouse(this.tobaccoName, this.cities[0]);
-		try {
-			for (let i = 0; i < 9; i++) {
-				this.ns.corporation.upgradeOfficeSize(this.tobaccoName, this.cities[0], 3);
-				while (this.ns.corporation(this.tobaccoName, this.cities[0])) { }
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-			}
-		} catch { }
-
+		for (let i = 0; i < 9; i++) {
+			this.ns.corporation.upgradeOfficeSize(this.tobaccoName, this.cities[0], 3);
+			while (this.ns.corporation.hireEmployee(this.tobaccoName, this.cities[0])) { }
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
+		}
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
 				if (city == this.cities[0]) continue;
-				try {
-					this.ns.corporation.expandCity(this.tobaccoName, city);
-					this.ns.corporation.purchaseWarehouse(this.tobaccoName, city);
-				} catch { }
+				this.ns.corporation.expandCity(this.tobaccoName, city);
+				this.ns.corporation.purchaseWarehouse(this.tobaccoName, city);
 				this.ns.corporation.upgradeOfficeSize(this.tobaccoName, city, 3);
 				while (this.ns.corporation.hireEmployee(this.tobaccoName, city)) { }
 				const jobAssign = [1, 1, 1, 1, 5];
-				for (let i = 0; i < jobAssign.length; i++); { this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[i], jobAssign[i]);	}
+				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[i], jobAssign[i]); }
 			}
 		}
 
 		this.ns.corporation.makeProduct(this.tobaccoName, this.cities[0], "Tobacco v1", 1e9, 1e9);
-		try {
-			for (let i = 2; i < 6; i++) {
-				this.ns.corporation.levelUpgrade("DreamSense");
+		for (let i = 2; i < 6; i++) {
+			this.ns.corporation.levelUpgrade("DreamSense");
+		}
+		for (let i = 2; i < 6; i++) {
+			while (this.ns.corporation.getUpgradeLevel(this.lvlUps[i]) < 20) {
+				this.ns.corporation.levelUpgrade(this.lvlUps[i]);
 			}
-		} catch { }
-		try {
-			for (let i = 2; i < 6; i++) {
-				while (this.ns.corporation.getUpgradeLevel(this.lvlUps[i]) < 20) {
-					this.ns.corporation.levelUpgrade(this.lvlUps[i]);
-				}
-			}
-		} catch { }
-		try {
 			for (let i = 0; i < 10; i++) {
 				this.ns.corporation.levelUpgrade("project Insight");
 			}
-		} catch { }
 
-		this.stage[0] += 1;
+			this.stage[0] += 1;
+		}
+
 	}
-
 }
-
 
 /** @param {NS} ns */
 export async function main(ns) {
