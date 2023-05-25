@@ -122,7 +122,7 @@ export class Business {
 			this.ns.corporation.sellMaterial(this.agriName, city, "Food", "MAX", "MP");
 		}
 
-		this.ns.corporation.hireAdVert(agriName);
+		this.ns.corporation.hireAdVert(this.agriName);
 		const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5];
 		for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(lvlUps[lvlOrder[i]]); } //hopefully this equals below
 		/*this.ns.corporation.levelUpgrade(lvlUps[0]);
@@ -158,7 +158,7 @@ export class Business {
 		else {
 			for (let city of this.cities) {
 				for (let i = 0; i < 4; i++) {
-					this.ns.corporation.buyMaterial(agriName, city, boostStock[i], 0);
+					this.ns.corporation.buyMaterial(this.agriName, city, this.boostStock[i], 0);
 				}
 			}
 			this.stage[0] += 1;
@@ -232,11 +232,6 @@ export class Business {
 					while (this.ns.corporation.hireEmployee(this.agriName, city)) { };
 					const jobAssign = [1, 1, 1, 1, 5];
 					for (let i = 0; i < jobAssign.length; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]);	}
-					this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 1);
-					this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1);
-					this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1);
-					this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 1);
-					this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 5);
 				} catch { }
 			}
 		}
