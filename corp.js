@@ -124,17 +124,17 @@ export class Business {
 
 		this.ns.corporation.hireAdVert(this.agriName);
 		const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5];
-		for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(lvlUps[lvlOrder[i]]); } //hopefully this equals below
-		/*this.ns.corporation.levelUpgrade(lvlUps[0]);
-		this.ns.corporation.levelUpgrade(lvlUps[2]);
-		this.ns.corporation.levelUpgrade(lvlUps[3]);
-		this.ns.corporation.levelUpgrade(lvlUps[4]);
-		this.ns.corporation.levelUpgrade(lvlUps[5]);
-		this.ns.corporation.levelUpgrade(lvlUps[0]);
-		this.ns.corporation.levelUpgrade(lvlUps[2]);
-		this.ns.corporation.levelUpgrade(lvlUps[3]);
-		this.ns.corporation.levelUpgrade(lvlUps[4]);
-		this.ns.corporation.levelUpgrade(lvlUps[5]);*/
+		for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); } //hopefully this equals below
+		/*this.ns.corporation.levelUpgrade(this.lvlUps[0]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[2]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[3]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[4]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[5]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[0]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[2]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[3]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[4]);
+		this.ns.corporation.levelUpgrade(this.lvlUps[5]);*/
 
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
