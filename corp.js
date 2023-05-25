@@ -206,11 +206,11 @@ export class Business {
 		//and we want them to take into account the current high earning cycles,
 		//not the old low earning cycles, so we'll wait for a bit
 		if (this.stage[1] <= 10) {
-			this.ns.print("waiting cycles: " + this.stage[1] + "/10. investors are currently offering: " + ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
+			this.ns.print("waiting cycles: " + this.stage[1] + "/10. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
 			this.stage[1] += 1;
 		}
 		else {
-			this.ns.tprint("investment offer round " + i + ": " + ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
+			this.ns.tprint("investment offer round " + i + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
 			this.ns.corporation.acceptInvestmentOffer();
 			this.stage[0] += 1;
 			this.stage[1] = 0;
