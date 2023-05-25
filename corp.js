@@ -118,8 +118,8 @@ export class Business {
 			for (let i = 0; i < 3; i++) {
 				this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], 1);
 			}
-			this.ns.corporation.sellMaterial(this.agriName, this.city, "Plants", "MAX", "MP");
-			this.ns.corporation.sellMaterial(this.agriName, this.city, "Food", "MAX", "MP");
+			this.ns.corporation.sellMaterial(this.agriName, city, "Plants", "MAX", "MP");
+			this.ns.corporation.sellMaterial(this.agriName, city, "Food", "MAX", "MP");
 		}
 
 		this.ns.corporation.hireAdVert(agriName);
