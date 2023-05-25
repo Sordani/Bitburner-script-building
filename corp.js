@@ -239,7 +239,7 @@ export class Business {
 	lastAGUpgrades() {
 		for (let i = 0; i < 9; i++) {
 			for (let city of this.cities) {
-				try { ns.corporation.upgradeWarehouse(this.agriName, city, 1); } catch { }
+				try { this.ns.corporation.upgradeWarehouse(this.agriName, city, 1); } catch { }
 			}
 		}
 		this.stage[0] += 1;
