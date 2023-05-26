@@ -271,8 +271,8 @@ export class Business {
 			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
 		}
 		for (let city of this.cities) {
+			if (city == this.cities[0]) continue;
 			for (let i = 0; i < 2; i++) {
-				if (city == this.cities[0]) continue;
 				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) {
 					this.ns.corporation.expandCity(this.tobaccoName, city);
 				}
