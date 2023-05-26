@@ -1,10 +1,10 @@
 export class Business {
   /**@type {NS} */
-  
   ns
   corpName
   agriName
   tobaccoName
+  investNum
   jobs
   boostStock
   lvlUps
@@ -17,6 +17,7 @@ export class Business {
     this.corpName = "TerraCorp";
     this.agriName = "AgriCorp";
     this.tobaccoName = "CamelCorp";
+    this.investNum = 1;
 
     this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
     this.boostStock = ["Hardware", "Robots", "AI Cores", "Real Estate"];
@@ -25,7 +26,7 @@ export class Business {
 
     //Hardware, Robots, AI Cores, and Real Estate Numbers. tinkering expected
     this.boostPhases = [
-      [125, 0, 75, 27000],
+      [1080, 0, 1201, 74388],
       [2675, 96, 2445, 119400],
       [6500, 630, 3750, 84000]
     ]
@@ -34,13 +35,13 @@ export class Business {
 
   //Tea and Party function
   teaParty() {
-  for (const division of this.ns.corporation.getCorporation().divisions) {
-    for (const city of this.ns.corporation.getDivision(division).cities) {
-      const office = this.ns.corporation.getOffice(division, city);
-      if (office.avgEnergy < 98) { this.ns.corporation.buyTea(division, city); }
-      if (office.avgMorale < 98) { this.ns.corporation.throwParty(division, city, 500_000); }
+    for (const division of this.ns.corporation.getCorporation().divisions) {
+      for (const city of this.ns.corporation.getDivision(division).cities) {
+        const office = this.ns.corporation.getOffice(division, city);
+        if (office.avgEnergy < 98) { this.ns.corporation.buyTea(division, city); }
+        if (office.avgMorale < 98) { this.ns.corporation.throwParty(division, city, 500_000); }
+      }
     }
-  }
   }
 
   //sets stage to appropriate step
@@ -96,7 +97,7 @@ export class Business {
         break;
       case 3:
         if (this.stage[1] == 0) this.ns.print("Accepting the first investor offer");
-        this.invest(1); //stage 3
+        this.invest(this.investNum); //stage 3
         break;
       case 4:
         this.ns.print("Further upgrades");
@@ -116,7 +117,8 @@ export class Business {
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.invest(2); //stage 8
+        this.investNum++;
+        this.invest(this.investNum); //stage 8
         break;
       case 9:
         this.ns.print("Last Agriculture upgrades");
@@ -153,22 +155,21 @@ export class Business {
       if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
       this.ns.corporation.setSmartSupply(this.agriName, city, true);
       while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
-      for (let i = 0; i < 3; i++) {
-        this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], 1);
-      }
+      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 3);
       this.ns.corporation.sellMaterial(this.agriName, city, "Plants", "MAX", "MP");
       this.ns.corporation.sellMaterial(this.agriName, city, "Food", "MAX", "MP");
     }
-
-    this.ns.corporation.hireAdVert(this.agriName);
-    const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5];
-    for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
-
     for (let i = 0; i < 2; i++) {
-      for (let city of this.cities) {
-        this.ns.corporation.upgradeWarehouse(this.agriName, city, 1);
-      }
+      this.ns.corporation.hireAdVert(this.agriName);
     }
+    /*const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5];
+    for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
+    */ //don't buy useless upgrades?
+    for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[1]); }
+    for (let city of this.cities) {
+      this.ns.corporation.upgradeWarehouse(this.agriName, city, 4);
+    }
+
     this.stage[0] += 1;
     this.stage[1] = 0;
 
@@ -208,9 +209,19 @@ export class Business {
       }
       this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/98");
       this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/98");
-    this.stage[1]++;
+      this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) { this.stage[0] += 1; this.stage[1] = 0; }
+    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) {
+      if (this.stage[0] == 1) {
+        for (let city of this.cities) {
+          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
+          for (let i = 0; i < 3, i++;) {
+            this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], 1);
+          }
+        }
+      }
+      this.stage[0] += 1; this.stage[1] = 0;
+    }
   }
 
   //Reassigning the employess so that nobody works in R&D
@@ -234,12 +245,13 @@ export class Business {
     //investor evaluation takes into account 10 cycles
     //and we want them to take into account the current high earning cycles,
     //not the old low earning cycles, so we'll wait for a bit
-    if (this.stage[1] <= 10) {
-      this.ns.print("waiting cycles: " + this.stage[1] + "/10. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
+    if (this.stage[1] <= 20) {
+      this.ns.print("waiting cycles: " + this.stage[1] + "/20. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.stage[1] += 1;
     }
+    else if (this.ns.corporation.getCorporation().state != "PURCHASE") { ns.sleep(0); }
     else {
-      this.ns.tprint("investment offer round " + i + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, "0.00a"));
+      this.ns.tprint("investment offer round " + i + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
@@ -296,12 +308,12 @@ export class Business {
     this.ns.corporation.purchaseWarehouse(this.tobaccoName, this.cities[0]);
     for (let i = 0; i < 9; i++) {
       this.ns.corporation.upgradeOfficeSize(this.tobaccoName, this.cities[0], 3);
-      while (this.ns.corporation.hireEmployee(this.tobaccoName, this.cities[0])) { }
-      this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-      this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-      this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
-      this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
     }
+    while (this.ns.corporation.hireEmployee(this.tobaccoName, this.cities[0])) { }
+    this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).numEmployees / 3.5));
     for (let city of this.cities) {
       if (city == this.cities[0]) continue;
       for (let i = 0; i < 2; i++) {
