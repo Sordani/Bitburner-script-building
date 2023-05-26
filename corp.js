@@ -21,7 +21,7 @@ export class Business {
 
     this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
     this.boostStock = ["Hardware", "Robots", "AI Cores", "Real Estate"];
-    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics"];
+    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight"];
     this.cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
 
     //Hardware, Robots, AI Cores, and Real Estate Numbers. tinkering expected
@@ -166,9 +166,7 @@ export class Business {
     for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
     */ //don't buy useless upgrades?
     for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[1]); }
-    for (let city of this.cities) {
-      this.ns.corporation.upgradeWarehouse(this.agriName, city, 4);
-    }
+    for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.agriName, city, 4); }
 
     this.stage[0] += 1;
     this.stage[1] = 0;
@@ -215,9 +213,9 @@ export class Business {
       if (this.stage[0] == 1) {
         for (let city of this.cities) {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
-          for (let i = 0; i < 3, i++;) {
-            this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], 1);
-          }
+          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 1);
+          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1);
+          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1);
         }
       }
       this.stage[0] += 1; this.stage[1] = 0;
@@ -232,7 +230,11 @@ export class Business {
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 2);
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 2);
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 2);
+      this.ns.corporation.upgradeWarehouse(this.agriName, city);
     }
+    const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5, 7]; //added 7 for wilson analytics
+    for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
+    //moved this from startstuff here prior to 2nd investment
     this.stage[0]++;
     this.stage[1] = 0;
   }
@@ -245,8 +247,8 @@ export class Business {
     //investor evaluation takes into account 10 cycles
     //and we want them to take into account the current high earning cycles,
     //not the old low earning cycles, so we'll wait for a bit
-    if (this.stage[1] <= 20) {
-      this.ns.print("waiting cycles: " + this.stage[1] + "/20. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+    if (this.stage[1] <= 15) {
+      this.ns.print("waiting cycles: " + this.stage[1] + "/15. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.stage[1] += 1;
     }
     else if (this.ns.corporation.getCorporation().state != "PURCHASE") { ns.sleep(0); }
@@ -260,6 +262,7 @@ export class Business {
 
   //buy more upgrades, office space, and warehouse space
   upgradeStuff() {
+    this.ns.corporation.levelUpgrade(this.lvlUps[8]);
     this.ns.corporation.levelUpgrade(this.lvlUps[1]);
     this.ns.corporation.levelUpgrade(this.lvlUps[1]);
     for (let i = 0; i < 8; i++) {
@@ -283,7 +286,7 @@ export class Business {
 
     for (let i = 0; i < 7; i++) {
       for (let city of this.cities) {
-        this.ns.corporation.upgradeWarehouse(this.agriName, city, 1);
+        this.ns.corporation.upgradeWarehouse(this.agriName, city, 4);
       }
     }
     this.stage[0] += 1;
