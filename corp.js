@@ -41,7 +41,9 @@ export class Business {
 		for (const city of this.ns.corporation.getDivision(this.agriName).cities) {
 			const office = this.ns.corporation.getOffice(this.agriName, city);
 			if (office.avgEne < 98) { this.ns.corporation.buyCoffee(this.agriName, city); }
-			if (office.avgHAP < 98 || office.avgMor < 98) { this.ns.corporation.throwParty(this.agriName, city, 500_000); }
+			if (office.avgHAP < 98 || office.avgMor < 98) {
+				this.ns.corporation.throwParty(this.agriName, city, 500_000);
+			}
 		}
 	}
 
@@ -111,7 +113,7 @@ export class Business {
 		if (!this.ns.corporation.hasCorporation()) { this.ns.corporation.createCorporation(this.corpName, false); }
 		if (!this.ns.corporation.hasCorporation()) { this.ns.corporation.createCorporation(this.corpName); }
 		this.ns.corporation.expandIndustry("Agriculture", this.agriName);
-		if (!this.ns.corporation.hasUnlockUpgrade("Smart Supply")) {this.ns.corporation.unlockUpgrade("Smart Supply"); }
+		if (!this.ns.corporation.hasUnlockUpgrade("Smart Supply")) { this.ns.corporation.unlockUpgrade("Smart Supply"); }
 
 		for (let city of this.cities) {
 			if (city != this.cities[5]) {
@@ -220,19 +222,19 @@ export class Business {
 			this.ns.corporation.levelUpgrade(this.lvlUps[0]);
 			this.ns.corporation.levelUpgrade(this.lvlUps[1]);
 		}
-		for (let i = 0; i < 2; i++) {
-			for (let city of this.cities) {
+		for (let city of this.cities) {
+			for (let i = 0; i < 2; i++) {
 				this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3); // this works
 				while (this.ns.corporation.hireEmployee(this.agriName, city)) { }; // this works
 				/*const jobAssign = [1, 1, 1, 1, 5]; //this or the below doesn't work
 				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]); }
 				*/
-				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[0], 1)
-				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[1], 1)
-				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[2], 1)
-				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[3], 1)
-				this.ns.corporation.setAutoJobAssignment(agriName, city, this.jobs[4], 5)
 			}
+			this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 1)
+			this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1)
+			this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1)
+			this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 1)
+			this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 5)
 		}
 
 		for (let i = 0; i < 7; i++) {
@@ -271,7 +273,7 @@ export class Business {
 		for (let i = 0; i < 2; i++) {
 			for (let city of this.cities) {
 				if (city == this.cities[0]) continue;
-				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) { 
+				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) {
 					this.ns.corporation.expandCity(this.tobaccoName, city);
 				}
 				this.ns.corporation.purchaseWarehouse(this.tobaccoName, city);
