@@ -291,19 +291,19 @@ export class Business {
 		}
 
 		this.ns.corporation.makeProduct(this.tobaccoName, this.cities[0], "Tobacco v1", 1e9, 1e9);
-		for (let i = 2; i < 6; i++) {
+		/*for (let i = 2; i < 6; i++) {
 			this.ns.corporation.levelUpgrade("DreamSense");
-		}
+		}*/ // don't need no stinkin DreamSense
 		for (let i = 2; i < 6; i++) {
 			while (this.ns.corporation.getUpgradeLevel(this.lvlUps[i]) < 20) {
 				this.ns.corporation.levelUpgrade(this.lvlUps[i]);
 			}
-			for (let i = 0; i < 10; i++) {
-				this.ns.corporation.levelUpgrade("Project Insight");
-			}
-
-			this.stage[0] += 1;
 		}
+		for (let i = 0; i < 10; i++) {
+			this.ns.corporation.levelUpgrade("Project Insight");
+		}
+
+		this.stage[0] += 1;
 
 	}
 }
