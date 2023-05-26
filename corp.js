@@ -1,5 +1,6 @@
 export class Business {
   /**@type {NS} */
+  
   ns
   corpName
   agriName
@@ -33,11 +34,11 @@ export class Business {
 
   //Tea and Party function
   teaParty() {
-  for (const division of ns.corporation.getCorporation().divisions) {
-    for (const city of ns.corporation.getDivision(division).cities) {
-      const office = ns.corporation.getOffice(division, city);
-      if (office.avgEnergy < 98) { ns.corporation.buyTea(division, city); }
-      if (office.avgMorale < 98) { ns.corporation.throwParty(division, city, 500_000); }
+  for (const division of this.ns.corporation.getCorporation().divisions) {
+    for (const city of this.ns.corporation.getDivision(division).cities) {
+      const office = this.ns.corporation.getOffice(division, city);
+      if (office.avgEnergy < 98) { this.ns.corporation.buyTea(division, city); }
+      if (office.avgMorale < 98) { this.ns.corporation.throwParty(division, city, 500_000); }
     }
   }
   }
@@ -143,13 +144,12 @@ export class Business {
     if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName, false); } catch { this.ns.print("not in bitnode 3, attempting to self-fund"); } }
     if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName); } catch { this.ns.print("self funding failed, requires 150 billion in cash available."); this.ns.exit(); } }
     this.stage[1] = 1;
-    this.ns.corporation.expandIndustry("Agriculture", this.agriName);
+    if (!this.ns.corporation.getCorporation().divisions.includes(this.agriName)) { this.ns.corporation.expandIndustry("Agriculture", this.agriName); }
     this.stage[1] = 2;
-    if (!this.ns.corporation.hasUnlockUpgrade("Smart Supply")) { this.ns.corporation.unlockUpgrade("Smart Supply"); }
+    if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
     this.stage[1] = 3;
     for (let city of this.cities) {
-      if (city != this.cities[5]) continue;
-      this.ns.corporation.expandCity(this.agriName, city);
+      if (!this.ns.corporation.getDivision(this.agriName).cities.includes(city)) { this.ns.corporation.expandCity(this.agriName, city); }
       if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
       this.ns.corporation.setSmartSupply(this.agriName, city, true);
       while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
@@ -210,7 +210,7 @@ export class Business {
       this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/98");
     this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && avgs[2] / 6 >= 98 && this.stage[1] > 0) { this.stage[0] += 1; this.stage[1] = 0; }
+    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) { this.stage[0] += 1; this.stage[1] = 0; }
   }
 
   //Reassigning the employess so that nobody works in R&D
