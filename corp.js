@@ -276,11 +276,17 @@ export class Business {
 				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) {
 					this.ns.corporation.expandCity(this.tobaccoName, city);
 				}
-				this.ns.corporation.purchaseWarehouse(this.tobaccoName, city);
+				if (!this.ns.corporation.hasWarehouse(this.tobaccoName, city)) { this.ns.corporation.purchaseWarehouse(this.tobaccoName, city); }
 				this.ns.corporation.upgradeOfficeSize(this.tobaccoName, city, 3);
 				while (this.ns.corporation.hireEmployee(this.tobaccoName, city)) { }
-				const jobAssign = [1, 1, 1, 1, 5];
+				/*const jobAssign = [1, 1, 1, 1, 5];
 				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[i], jobAssign[i]); }
+				*/
+				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[0], 1);
+				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[1], 1);
+				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[2], 1);
+				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[3], 1);
+				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[4], 5);
 			}
 		}
 
@@ -293,7 +299,7 @@ export class Business {
 				this.ns.corporation.levelUpgrade(this.lvlUps[i]);
 			}
 			for (let i = 0; i < 10; i++) {
-				this.ns.corporation.levelUpgrade("project Insight");
+				this.ns.corporation.levelUpgrade("Project Insight");
 			}
 
 			this.stage[0] += 1;
