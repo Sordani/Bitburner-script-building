@@ -270,8 +270,8 @@ export class Business {
 			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
 			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(this.tobaccoName, this.cities[0]).employees / 3.5));
 		}
-		for (let i = 0; i < 2; i++) {
-			for (let city of this.cities) {
+		for (let city of this.cities) {
+			for (let i = 0; i < 2; i++) {
 				if (city == this.cities[0]) continue;
 				if (!this.ns.corporation.getDivision(this.tobaccoName).cities.includes(city)) {
 					this.ns.corporation.expandCity(this.tobaccoName, city);
@@ -282,12 +282,12 @@ export class Business {
 				/*const jobAssign = [1, 1, 1, 1, 5];
 				for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[i], jobAssign[i]); }
 				*/
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[0], 1);
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[1], 1);
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[2], 1);
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[3], 1);
-				this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[4], 5);
 			}
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[0], 1);
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[1], 1);
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[2], 1);
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[3], 1);
+			this.ns.corporation.setAutoJobAssignment(this.tobaccoName, city, this.jobs[4], 5);
 		}
 
 		this.ns.corporation.makeProduct(this.tobaccoName, this.cities[0], "Tobacco v1", 1e9, 1e9);
