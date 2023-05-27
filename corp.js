@@ -262,7 +262,7 @@ export class Business {
 
   //buy more upgrades, office space, and warehouse space
   upgradeStuff() {
-    this.ns.corporation.levelUpgrade(this.lvlUps[8]);
+    this.ns.corporation.levelUpgrade(this.lvlUps[7]);
     this.ns.corporation.levelUpgrade(this.lvlUps[1]);
     this.ns.corporation.levelUpgrade(this.lvlUps[1]);
     for (let i = 0; i < 8; i++) {
