@@ -97,7 +97,7 @@ export class Business {
         break;
       case 3:
         if (this.stage[1] == 0) this.ns.print("Accepting the first investor offer");
-        this.invest(this.investNum); //stage 3
+        this.invest(this.investNum); //stage 3 //1st investor offer is around 310 billion
         break;
       case 4:
         this.ns.print("Further upgrades");
@@ -217,11 +217,11 @@ export class Business {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1);
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1);
         }
-      } else if (this.stage[0] == 5) {
+      } /*else if (this.stage[0] == 5) {
         const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5, 7]; //added 7 for wilson analytics
         for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
         //moved this from startstuff here prior to 2nd investment
-      }
+      } */ //not enough money anywhere for these upgrades
       this.stage[0] += 1; this.stage[1] = 0;
     }
   }
