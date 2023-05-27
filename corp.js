@@ -217,6 +217,10 @@ export class Business {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1);
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1);
         }
+      } else if (this.stage[0] == 5) {
+        const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5, 7]; //added 7 for wilson analytics
+        for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
+        //moved this from startstuff here prior to 2nd investment
       }
       this.stage[0] += 1; this.stage[1] = 0;
     }
@@ -232,9 +236,7 @@ export class Business {
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 2);
       this.ns.corporation.upgradeWarehouse(this.agriName, city);
     }
-    const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5, 7]; //added 7 for wilson analytics
-    for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
-    //moved this from startstuff here prior to 2nd investment
+
     this.stage[0]++;
     this.stage[1] = 0;
   }
