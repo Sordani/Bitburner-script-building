@@ -197,8 +197,8 @@ export class Business {
   //Wait till the employee stats are high enough and then go to the next stage
   employeeSatisfactionCheck() {
     this.ns.clearLog();
-    const avgs = [0, 0];
     for (const division of this.ns.corporation.getCorporation().divisions) {
+      const avgs = [0, 0];
       this.ns.print("   " + division);
       this.ns.print("");
       for (const city of this.ns.corporation.getDivision(division).cities) {
