@@ -4,6 +4,7 @@ export class Business {
   corpName
   agriName
   tobaccoName
+  waterName
   investNum
   jobs
   boostStock
@@ -17,6 +18,7 @@ export class Business {
     this.corpName = "TerraCorp";
     this.agriName = "AgriCorp";
     this.tobaccoName = "CamelCorp";
+    this.waterName = "AquaCorp";
     this.investNum = 1;
 
     this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
@@ -43,6 +45,11 @@ export class Business {
       }
     }
   }
+  //function to replicate smart supply and save money earlygame 
+  dumbSupply() {
+    
+  }
+
 
   //sets stage to appropriate step
   setStage() {
@@ -117,7 +124,6 @@ export class Business {
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.investNum++;
         this.invest(this.investNum); //stage 8
         break;
       case 9:
@@ -259,6 +265,7 @@ export class Business {
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
+      this.investNum ++;
     }
   }
 
