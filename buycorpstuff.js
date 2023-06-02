@@ -133,7 +133,7 @@ export function humanResources(ns) {
         ns.corporation.setAutoJobAssignment(division, city, jobs[1], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[4], (ns.corporation.getOffice(division, city).numEmployees - (ns.corporation.getOffice(division, city).numEmployees / 4)));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[4], (ns.corporation.getOffice(division, city).numEmployees - (ns.corporation.getOffice(division, city).numEmployees / 5)));
       }
     }
     else {
@@ -152,39 +152,72 @@ export function humanResources(ns) {
 //function to spend research points
 /** @param {NS} ns */
 export function rAndD(ns) {
-  //write an array of strings of research names
-  //get research 10k upgrade as soon as we have 12k research points
-  //get market T.A. II (70k for I and II) when we have 140k research points
-  //get all the other researches as we have a reserve of 100k research points
-  ns.corporation.research
+  const rdNames = ["Hi-Tech R&D Laboratory", "Market-TA.I", "Market-TA.II", "Automatic Drug Administration", "Go-Juice", "Overclock", "Sti.mu", "CPH4 Injections", "Drones", "Drones - Assembly", "Drones - Transport", "Self-Correcting Assemblers", "AutoBrew", "AutoPartyManager", "uPgrade: Fulcrum", "uPgrade: Capacity.I", "uPgrade:Dashboard"];
+
+  for (const division of ns.corporation.getCorporation().divisions) {
+    if (ns.corporation.getDivision(division).researchPoints > 12000 && !ns.corporation.hasResearched(division, rdNames[0])) { ns.corporation.research(division, rdNames[0]); }
+    if (!ns.corporation.hasResearched(division, rdNames[0])) { return; }
+    if (ns.corporation.getDivision(division).researchPoints > 140000 && !ns.corporation.hasResearched(division, rdNames[2])) { ns.corporation.research(division, rdNames[1]); ns.corporation.research(division, rdNames[2]); } else { return; }
+    if (!ns.corporation.hasResearched(division, rdNames[2])) { return; }
+    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[4])) { ns.corporation.research(division, rdNames[3]); ns.corporation.research(division, rdNames[4]); }
+    if (!ns.corporation.hasResearched(division, rdNames[4])) { return; }
+    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
+    if (!ns.corporation.hasResearched(division, rdNames[6])) { return; }
+    if (ns.corporation.getDivision(division).researchPoints > 100000 && !ns.corporation.hasResearched(division, rdNames[7])) { ns.corporation.research(division, rdNames[7]); }
+    for (const name of rdNames) {
+      if (ns.corporation.getDivision(division).researchPoints * 30 >= ns.corporation.getResearchCost(division, name) && !ns.corporation.hasResearched(division, name)) { ns.corporation.research(division, name); }
+    }
+  }
 }
 
 //function to set prices
 /** @param {NS} ns */
 export function setPrices(ns) {
-//remember to use market T.A. II for setting prices when it's available.
+  //remember to use market T.A. II for setting prices when it's available.
+
+  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+  const mats = ["Water", "Food", "Plants", "Chemicals",] //fill this with all the rest of the products.
+  for (const division of ns.corporation.getCorporation().divisions) {
+    for (const city of cities) {
+      if (ns.corporation.getDivision(division).makesProducts) {
+        const prods = ns.corporation.getDivision(division).products
+        for (const prod of prods) {
+          let prodData = ns.corporation.getProduct(division, city, prod);
+          if (prodData.developmentProgress < 100 && !ns.corporation.hasResearched(division, "uPgrade:Dashboard")) { continue; }
+          //we stopped here. we want to increase the sell price of MP by writing MP*x where x = a changing number depending on how much product we still need to sell.
+          if (prodData.actualSellAmount >= prodData.productionAmount || prodData.stored > 0)
+          ns.corporation.sellMaterial(division, city, prod, "MAX", "MP")
+        }
+      }
+    }
+  }
 }
 
 //function to create tobacco products continuously
 /** @param {NS} ns */
 export function tobaccoProdGo(ns) {
   const tobaccoDiv = "CamelCorp";
-  let version = 1;
   const prodName = "Tobacco v";
+  if (ns.corporation.hasResearched(tobaccoDiv, "uPgrade: Capacity.I")) {
+    const prodMax = 4
+  } else {
+    const prodMax = 3
+  }
   let products = ns.corporation.getDivision.products;
-  if (products.length >= 3 && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[2]).developmentProgress < 100) { return; }
-  if (products.length >= 3 && ns.corporation.getProduct(tobaccoDiv, "Aevum", product[2]).developmentProgress >= 100) { ns.corporation.discontinueProduct(tobaccoDiv, products[0]); }
-  ns.corporation.makeProduct(tobaccoDiv, "Aevum", prodName + version, Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
-  version++;
+  let version = parseInt(products.at(-1).at(-1)) + 1;
+  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[2]).developmentProgress < 100) { return; }
+  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", product[2]).developmentProgress >= 100) { ns.corporation.discontinueProduct(tobaccoDiv, products[0]); }
+  ns.corporation.makeProduct(tobaccoDiv, "Aevum", (prodName + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
 }
 
 //function to purchase corp-wide upgrades.
 /** @param {NS} ns */
 export function buyUpgrades(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds * 0.2;
-  const lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight"];
+  const lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
   const wilsonCost = ns.corporation.getUpgradeLevelCost(lvlUps[6]);
   const labCost = ns.corporation.getUpgradeLevelCost(lvlUps[7]);
+  const abcCost = ns.corporation.getUpgradeLevelCost(lvlUps[8]);
   while (ns.corporation.getUpgradeLevel(lvlUps[0]) != ns.corporation.getUpgradeLevel(lvlUps[1])) {
     if (ns.corporation.getUpgradeLevel(lvlUps[0]) < ns.corporation.getUpgradeLevel(lvlUps[1])) {
       ns.corporation.levelUpgrade(lvlUps[0]);
@@ -224,6 +257,7 @@ export function buyUpgrades(ns) {
   for (let i = 2; i < 5; i++) {
     ns.corporation.levelUpgrade(lvlUps[i]);
   }
+  if (upgradeFunds * 0.01 > abcCost) { ns.corporation.levelUpgrade(lvlUps[8]); }
 }
 
 /** @param {NS} ns */
