@@ -34,7 +34,7 @@ export async function divisPurchases(ns) {
           for (city of supportCities) {
             while (ns.corporation.getOffice(division, city).numEmployees < y) {
               ns.corporation.upgradeOfficeSize(division, city, 3);
-              while (ns.corporation.hireEmployee(division, city)) { }
+              while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
               await ns.sleep(0);
             }
           }
@@ -45,7 +45,7 @@ export async function divisPurchases(ns) {
       while (ns.corporation.getOffice(division, prodCity).numEmployees < ns.corporation.getOffice(division, supportCities[0]) + 30) {
         ns.print(prodCity + " is not 30 employees ahead of the other cities. correcting. goal is " + (ns.corporation.getOffice(division, supportCities[0]) + 30));
         ns.corporation.upgradeOfficeSize(division, prodCity, 3);
-        while (ns.corporation.hireEmployee(division, prodCity)) { }
+        while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
         await ns.sleep(0);
       }
       let z = ns.corporation.getWarehouse(division, prodCity).level;
@@ -67,7 +67,7 @@ export async function divisPurchases(ns) {
         if (officeExpCost < advertCost) {
           if (officeExpCost < supportExpCost) {
             ns.corporation.upgradeOfficeSize(division, prodCity, 15);
-            while (ns.corporation.hireEmployee(division, prodCity)) { }
+            while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
             ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
           }
           else {
@@ -107,15 +107,15 @@ export async function divisPurchases(ns) {
       ns.print("officeExps: " + officeExps);
       ns.print("warehouseCost: " + warehouseCost);
       ns.print("warehouseUps: " + warehouseUps);
-      let y = ns.corporation.getOffice(division, cities[0]);
+      let y = Math.max(ns.corporation.getOffice(division, cities[0]).size, ns.corporation.getOffice(division, cities[1]).size, ns.corporation.getOffice(division, cities[2]).size, ns.corporation.getOffice(division, cities[3]).size, ns.corporation.getOffice(division, cities[4]).size, ns.corporation.getOffice(division, cities[5]).size);
       while (!officeExps.every((number) => number === officeExps[0])) {
         ns.print("found inbalance in officeExps for " + division + ". Correcting");
         ns.print("officeExps: " + officeExps);
-        if (funds < officeExpCost * 1.5) { ns.print("not enough funds to correct. awaiting income."); return; }
+        if (funds < officeExpCost) { ns.print("not enough funds to correct. awaiting income."); return; }
         for (const city of cities) {
           while (ns.corporation.getOffice(division, city).numEmployees < y) {
             ns.corporation.upgradeOfficeSize(division, city, 3);
-            while (ns.corporation.hireEmployee(division, city)) { }
+            while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
             await ns.sleep(0);
           }
         }
@@ -127,7 +127,7 @@ export async function divisPurchases(ns) {
         for (let i = 0; i < officeExps.length; i++) {
           officeExpCost += officeExps[i];
         }
-        y += 15;
+        y = Math.max(ns.corporation.getOffice(division, cities[0]).size, ns.corporation.getOffice(division, cities[1]).size, ns.corporation.getOffice(division, cities[2]).size, ns.corporation.getOffice(division, cities[3]).size, ns.corporation.getOffice(division, cities[4]).size, ns.corporation.getOffice(division, cities[5]).size);
         funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
@@ -153,16 +153,16 @@ export async function divisPurchases(ns) {
         funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
-      while ((funds * 0.8) / (divisions.length) >= officeExpCost) {
+      if ((funds * 0.8) / (divisions.length) >= officeExpCost) {
         ns.print("upgrading Office Sizes for all cities in " + division);
         for (const city of cities) {
           ns.corporation.upgradeOfficeSize(division, city, 15);
-          while (ns.corporation.hireEmployee(division, city)) { }
+          while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
         }
         funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
-      while ((funds * 0.2) / (divisions.length) >= warehouseCost) {
+      if ((funds * 0.2) / (divisions.length) >= warehouseCost) {
         ns.print("upgrading warehouses for all cities in " + division);
         for (const city of cities) {
           ns.corporation.upgradeWarehouse(division, city);
