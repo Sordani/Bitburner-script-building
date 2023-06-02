@@ -27,9 +27,9 @@ export function divisPurchases(ns) {
       ns.print("supportWHCost: " + supportWHCost);
       ns.print("supportWHs: " + supportWHs);
       let y = 15;
-      if (!supportExps.reduce((a, x) => a == x)) {
+      if (!supportExps.every((number) => number === supportExps[0])) {
         ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
-        while (!supportExps.reduce((a, x) => a == x)) {
+        while (!supportExps.every((number) => number === supportExps[0])) {
           if (funds < supportExpCost) { ns.print("not enough funds to correct. awaiting funds"); return; }
           for (city of supportCities) {
             while (ns.corporation.getOffice(division, city).numEmployees < y) {
@@ -46,7 +46,7 @@ export function divisPurchases(ns) {
         while (ns.corporation.hireEmployee(division, prodCity)) { }
       }
       let z = ns.corporation.getWarehouse(division, prodCity).level;
-      while (!supportWHs.reduce((a, x) => a == x)) {
+      while (!supportWHs.every((number) => number === supportWHs[0])) {
         ns.print("found inbalance in supportWHs. correcting");
         if (funds < supportWHCost) { return; }
         for (city of supportCities) {
@@ -100,7 +100,7 @@ export function divisPurchases(ns) {
       ns.print("warehouseCost: " + warehouseCost);
       ns.print("warehouseUps: " + warehouseUps);
       let y = 15;
-      while (!officeExps.reduce((a, x) => a == x)) {
+      while (!officeExps.every((number) => number === officeExps[0])) {
         ns.print("found inbalance in officeExps for " + division + ". Correcting");
         if (funds < officeExpCost * 1.5) { ns.print("not enough funds to correct. awaiting income."); return; }
         for (city of cities) {
@@ -112,7 +112,7 @@ export function divisPurchases(ns) {
         y += 15;
       }
       let z = ns.corporation.getWarehouse(division, cities[0]).level;
-      while (!warehouseUps.reduce((a, x) => a == x)) {
+      while (!warehouseUps.every((number) => number === warehouseUps[0])) {
         ns.print("found inbalance in supportWHs for " + division + ". Correcting");
         if (funds < warehouseUps) { ns.print("not enough funds to correct. awaiting income."); return; }
         for (city of cities) {
@@ -255,11 +255,22 @@ export function tobaccoProdGo(ns) {
 
 //function to purchase corp-wide upgrades.
 /** @param {NS} ns */
-export function corpPurchases(ns) {
+export async function corpPurchases(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds * 0.2;
-  const lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
-  const wilsonCost = ns.corporation.getUpgradeLevelCost(lvlUps[6]);
-  const labCost = ns.corporation.getUpgradeLevelCost(lvlUps[7]);
+  const lvlUps = [
+    "Smart Factories",
+    "Smart Storage",
+    "DreamSense",
+    "Wilson Analytics",
+    "Nuoptimal Nootropic Injector Implants",
+    "Speech Processor Implants",
+    "Neural Accelerators",
+    "FocusWires",
+    "ABC SalesBots",
+    "Project Insight"
+  ];
+  const wilsonCost = ns.corporation.getUpgradeLevelCost(lvlUps[3]);
+  const labCost = ns.corporation.getUpgradeLevelCost(lvlUps[9]);
   const abcCost = ns.corporation.getUpgradeLevelCost(lvlUps[8]);
   while (ns.corporation.getUpgradeLevel(lvlUps[0]) != ns.corporation.getUpgradeLevel(lvlUps[1])) {
     if (ns.corporation.getUpgradeLevel(lvlUps[0]) < ns.corporation.getUpgradeLevel(lvlUps[1])) {
@@ -268,33 +279,42 @@ export function corpPurchases(ns) {
     else {
       ns.corporation.levelUpgrade(lvlUps[1]);
     }
+    await ns.sleep(0);
   }
   const factCost = ns.corporation.getUpgradeLevelCost(lvlUps[0]) + ns.corporation.getUpgradeLevelCost(lvlUps[1]);
   let augLevels = [];
-  for (let i = 2; i < 5; i++) {
+  for (let i = 4; i < 8; i++) {
     augLevels.push(ns.corporation.getUpgradeLevel(lvlUps[i]));
+    ns.print(augLevels[i]);
   }
-  while (!augLevels.reduce((a, x) => a == x)) {
+  while (!augLevels.every((number) => number === augLevels[0])) {
     ns.print("employee augment upgrades imbalanced. correcting");
-    while (ns.corporation.getUpgradeLevel(lvlUps[2]) < ns.corporation.getUpgradeLevel(lvlUps[3]) || ns.corporation.getUpgradeLevel(lvlUps[2]) < ns.corporation.getUpgradeLevel(lvlUps[4]) || ns.corporation.getUpgradeLevel(lvlUps[2]) < ns.corporation.getUpgradeLevel(lvlUps[5])) {
-      ns.corporation.levelUpgrade(lvlUps[2]);
-    }
-    while (ns.corporation.getUpgradeLevel(lvlUps[2]) > ns.corporation.getUpgradeLevel(lvlUps[3])) {
-      ns.corporation.levelUpgrade(lvlUps[3]);
-    }
-    while (ns.corporation.getUpgradeLevel(lvlUps[2]) > ns.corporation.getUpgradeLevel(lvlUps[4])) {
+    ns.print("augLevels: " + augLevels);
+    await ns.sleep(0);
+    while (ns.corporation.getUpgradeLevel(lvlUps[4]) < ns.corporation.getUpgradeLevel(lvlUps[5]) || ns.corporation.getUpgradeLevel(lvlUps[4]) < ns.corporation.getUpgradeLevel(lvlUps[6]) || ns.corporation.getUpgradeLevel(lvlUps[4]) < ns.corporation.getUpgradeLevel(lvlUps[7])) {
       ns.corporation.levelUpgrade(lvlUps[4]);
+      await ns.sleep(0);
     }
-    while (ns.corporation.getUpgradeLevel(lvlUps[2]) > ns.corporation.getUpgradeLevel(lvlUps[5])) {
+    while (ns.corporation.getUpgradeLevel(lvlUps[4]) > ns.corporation.getUpgradeLevel(lvlUps[5])) {
       ns.corporation.levelUpgrade(lvlUps[5]);
+      await ns.sleep(0);
+    }
+    while (ns.corporation.getUpgradeLevel(lvlUps[4]) > ns.corporation.getUpgradeLevel(lvlUps[6])) {
+      ns.corporation.levelUpgrade(lvlUps[6]);
+      await ns.sleep(0);
+    }
+    while (ns.corporation.getUpgradeLevel(lvlUps[4]) > ns.corporation.getUpgradeLevel(lvlUps[7])) {
+      ns.corporation.levelUpgrade(lvlUps[7]);
+      await ns.sleep(0);
     }
     augLevels = [];
-    for (let i = 2; i < 5; i++) {
+    for (let i = 4; i < 8; i++) {
       augLevels.push(ns.corporation.getUpgradeLevel(lvlUps[i]));
     }
+    await ns.sleep(0);
   }
   const employeeUpCost = ns.corporation.getUpgradeLevelCost(lvlUps[2]) + ns.corporation.getUpgradeLevelCost(lvlUps[3]) + ns.corporation.getUpgradeLevelCost(lvlUps[4]) + ns.corporation.getUpgradeLevelCost(lvlUps[5]);
-  ns.print("employeeUpCost: " + employeeUpCost + " - funds allowed: " + upgradeFunds);
+  ns.print("employeeUpCost: " + employeeUpCost + " // funds allowed: " + upgradeFunds);
   if (upgradeFunds * 2.5 > wilsonCost) { ns.print("buying " + lvlUps[6] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[6]); return; }
   if (upgradeFunds < employeeUpCost) { return; }
   if (employeeUpCost / 2 > labCost) { ns.print("buying " + lvlUps[7] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[7]); return; }
@@ -322,13 +342,13 @@ export async function main(ns) {
       //same as above
       await ns.sleep(0);
     }
-    corpPurchases(ns); //corp and divisPurchases put here because infinity loop testing.
-   // divisPurchases(ns);
+    await corpPurchases(ns); //corp and divisPurchases put here because infinity loop testing.
+    // divisPurchases(ns);
     //and to this part put things you want done exactly once per cycle
-   // setPrices(ns);
-   // tobaccoProdGo(ns);
-   // rAndD(ns);
-   // humanResources(ns)
+    // setPrices(ns);
+    // tobaccoProdGo(ns);
+    // rAndD(ns);
+    // humanResources(ns)
   }
 
 
