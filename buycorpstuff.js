@@ -26,15 +26,18 @@ export function divisPurchases(ns) {
       ns.print("supportExps: " + supportExps);
       ns.print("supportWHCost: " + supportWHCost);
       ns.print("supportWHs: " + supportWHs);
-      let y = ns.corporation.getOffice(division, prodCity).numEmployees >= 45 ? ns.corporation.getOffice(division, prodCity).numEmployees - 30 : ns.corporation.getOffice(division, prodCity).numEmployees - 15;
-      while (!supportExps.reduce((a, x) => a == x)) {
+      let y = 15;
+      if (!supportExps.reduce((a, x) => a == x)) {
         ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
-        if (funds < supportExpCost) { return; }
-        for (city of supportCities) {
-          while (ns.corporation.getOffice(division, city).numEmployees < y) {
-            ns.corporation.upgradeOfficeSize(division, city, 3);
-            while (ns.corporation.hireEmployee(division, city)) { }
+        while (!supportExps.reduce((a, x) => a == x)) {
+          if (funds < supportExpCost) { ns.print("not enough funds to correct. awaiting funds"); return; }
+          for (city of supportCities) {
+            while (ns.corporation.getOffice(division, city).numEmployees < y) {
+              ns.corporation.upgradeOfficeSize(division, city, 3);
+              while (ns.corporation.hireEmployee(division, city)) { }
+            }
           }
+          y += 3;
         }
       }
       while (ns.corporation.getOffice(division, prodCity).numEmployees < ns.corporation.getOffice(division, supportCities[0]) + 30) {
@@ -184,7 +187,7 @@ export function rAndD(ns) {
     if (!ns.corporation.hasResearched(division, rdNames[2])) { return; }
     if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[4])) { ns.print("purchasing research: " + rdNames[4] + " in " + division); ns.corporation.research(division, rdNames[3]); ns.corporation.research(division, rdNames[4]); }
     if (!ns.corporation.hasResearched(division, rdNames[4])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.print("purchasing research: " + rdNames[6] + " in " + division);ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
+    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.print("purchasing research: " + rdNames[6] + " in " + division); ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
     if (!ns.corporation.hasResearched(division, rdNames[6])) { return; }
     if (ns.corporation.getDivision(division).researchPoints > 100000 && !ns.corporation.hasResearched(division, rdNames[7])) { ns.print("purchasing research: " + rdNames[7] + " in " + division); ns.corporation.research(division, rdNames[7]); }
     for (const name of rdNames) {
@@ -319,13 +322,13 @@ export async function main(ns) {
       //same as above
       await ns.sleep(0);
     }
-      corpPurchases(ns); //corp and divisPurchases put here because infinity loop testing.
-      divisPurchases(ns);
+    corpPurchases(ns); //corp and divisPurchases put here because infinity loop testing.
+   // divisPurchases(ns);
     //and to this part put things you want done exactly once per cycle
-    setPrices(ns);
-    tobaccoProdGo(ns);
-    rAndD(ns);
-    humanResources(ns)
+   // setPrices(ns);
+   // tobaccoProdGo(ns);
+   // rAndD(ns);
+   // humanResources(ns)
   }
 
 
