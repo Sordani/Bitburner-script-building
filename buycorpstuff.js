@@ -1,10 +1,10 @@
 //function to buy division-specific purchases
 /** @param {NS} ns */
 export async function divisPurchases(ns) {
-  const funds = ns.corporation.getCorporation().funds * 0.75;
   const prodCity = "Aevum";
   const supportCities = ["Sector-12", "Chongqing", "New Tokyo", "Ishima", "Volhaven"]
   const divisions = ns.corporation.getCorporation().divisions
+  let funds = ns.corporation.getCorporation().funds * 0.75;
   for (const division of divisions) {
     if (ns.corporation.getDivision(division).makesProducts) {
       let advertCost = ns.corporation.getHireAdVertCost(division);
@@ -107,7 +107,7 @@ export async function divisPurchases(ns) {
       ns.print("officeExps: " + officeExps);
       ns.print("warehouseCost: " + warehouseCost);
       ns.print("warehouseUps: " + warehouseUps);
-      let y = 15;
+      let y = ns.corporation.getOffice(division, cities[0]);
       while (!officeExps.every((number) => number === officeExps[0])) {
         ns.print("found inbalance in officeExps for " + division + ". Correcting");
         ns.print("officeExps: " + officeExps);
@@ -119,7 +119,16 @@ export async function divisPurchases(ns) {
             await ns.sleep(0);
           }
         }
+        officeExps = [];
+        for (const city of cities) {
+          officeExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+        }
+        officeExpCost = 0;
+        for (let i = 0; i < officeExps.length; i++) {
+          officeExpCost += officeExps[i];
+        }
         y += 15;
+        funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
       let z = ns.corporation.getWarehouse(division, cities[0]).level;
@@ -133,6 +142,15 @@ export async function divisPurchases(ns) {
             await ns.sleep(0);
           }
         }
+        warehouseUps = [];
+        for (const city of cities) {
+          warehouseUps.push(ns.corporation.getUpgradeWarehouseCost(division, city));
+        }
+        warehouseCost = 0;
+        for (let i = 0; i < warehouseUps.length; i++) {
+          warehouseCost += warehouseUps[i];
+        }
+        funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
       while ((funds * 0.8) / (divisions.length) >= officeExpCost) {
@@ -141,6 +159,7 @@ export async function divisPurchases(ns) {
           ns.corporation.upgradeOfficeSize(division, city, 15);
           while (ns.corporation.hireEmployee(division, city)) { }
         }
+        funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
       while ((funds * 0.2) / (divisions.length) >= warehouseCost) {
@@ -148,6 +167,7 @@ export async function divisPurchases(ns) {
         for (const city of cities) {
           ns.corporation.upgradeWarehouse(division, city);
         }
+        funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
     }
@@ -240,10 +260,10 @@ export function setPrices(ns) {
       }
       for (const mat of mats) {
         const matData = ns.corporation.getMaterial(division, city, mat)
-        if (matData.productionAmount <= 0) { 
+        if (matData.productionAmount <= 0) {
           ns.corporation.sellMaterial(division, city, mat, 0, 0);
           continue;
-          }
+        }
         if (ns.corporation.hasResearched(division, "Market-TA.II")) {
           ns.corporation.sellMaterial(division, city, mat, "MAX", "MP");
           ns.corporation.setMaterialMarketTA2(division, city, mat, true);
