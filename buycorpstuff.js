@@ -21,12 +21,7 @@ export async function divisPurchases(ns) {
         supportExpCost += supportExps[i];
         supportWHCost += supportWHs[i];
       }
-
-      ns.print("supportExpCost: " + supportExpCost);
-      ns.print("supportExps: " + supportExps);
-      ns.print("supportWHCost: " + supportWHCost);
-      ns.print("supportWHs: " + supportWHs);
-      let y = 15;
+      let y = Math.max(ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[0], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[1], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[2], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[3], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[4], 15));
       if (!supportExps.every((number) => number === supportExps[0])) {
         ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
         while (!supportExps.every((number) => number === supportExps[0])) {
@@ -38,31 +33,32 @@ export async function divisPurchases(ns) {
               await ns.sleep(0);
             }
           }
-          y += 3;
+          y = Math.max(ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[0], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[1], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[2], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[3], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[4], 15));
           await ns.sleep(0);
         }
       }
-      while (ns.corporation.getOffice(division, prodCity).numEmployees < ns.corporation.getOffice(division, supportCities[0]) + 30) {
+      while (ns.corporation.getOffice(division, prodCity).size < ns.corporation.getOffice(division, supportCities[0]).size + 30) {
         ns.print(prodCity + " is not 30 employees ahead of the other cities. correcting. goal is " + (ns.corporation.getOffice(division, supportCities[0]) + 30));
         ns.corporation.upgradeOfficeSize(division, prodCity, 3);
         while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
         await ns.sleep(0);
       }
-      let z = ns.corporation.getWarehouse(division, prodCity).level;
+      let z = Math.max(ns.corporation.getWarehouse(division, prodCity).level, ns.corporation.getWarehouse(division, supportCities[0]).level, ns.corporation.getWarehouse(division, supportCities[1]).level, ns.corporation.getWarehouse(division, supportCities[2]).level, ns.corporation.getWarehouse(division, supportCities[3]).level, ns.corporation.getWarehouse(division, supportCities[4]).level);
       while (!supportWHs.every((number) => number === supportWHs[0])) {
         ns.print("found inbalance in supportWHs. correcting");
         ns.print("supportWHs: " + supportWHs);
         if (funds < supportWHCost) { return; }
-        for (city of supportCities) {
+        for (const city of supportCities) {
           while (ns.corporation.getWarehouse(division, city).level < z) {
             ns.corporation.upgradeWarehouse(division, city);
             ns.print("upgrading " + city + " warehouse in " + division);
             await ns.sleep(0);
           }
         }
+        funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
-      while ((funds * 0.8) / divisions.length >= advertCost) {
+      if ((funds * 0.8) / divisions.length >= advertCost || (funds * 0.8) / divisions.length >= officeExpCost) {
         if (officeExpCost > advertCost) { ns.corporation.hireAdVert(division); ns.print("AdVert bought in " + division); }
         if (officeExpCost < advertCost) {
           if (officeExpCost < supportExpCost) {
@@ -80,7 +76,7 @@ export async function divisPurchases(ns) {
         }
         await ns.sleep(0);
       }
-      while ((funds * 0.2) / divisions.length >= ns.corporation.getUpgradeWarehouseCost(division, supportCities[0]) * 6) {
+      while ((funds * 0.01) / divisions.length >= ns.corporation.getUpgradeWarehouseCost(division, supportCities[0]) * 6) {
         ns.print("upgrading warehouses in " + division);
         ns.corporation.upgradeWarehouse(division, prodCity);
         for (const city of supportCities) {
@@ -103,10 +99,6 @@ export async function divisPurchases(ns) {
         officeExpCost += officeExps[i];
         warehouseCost += warehouseUps[i];
       }
-      ns.print("officeExpCost: " + officeExpCost);
-      ns.print("officeExps: " + officeExps);
-      ns.print("warehouseCost: " + warehouseCost);
-      ns.print("warehouseUps: " + warehouseUps);
       let y = Math.max(ns.corporation.getOffice(division, cities[0]).size, ns.corporation.getOffice(division, cities[1]).size, ns.corporation.getOffice(division, cities[2]).size, ns.corporation.getOffice(division, cities[3]).size, ns.corporation.getOffice(division, cities[4]).size, ns.corporation.getOffice(division, cities[5]).size);
       while (!officeExps.every((number) => number === officeExps[0])) {
         ns.print("found inbalance in officeExps for " + division + ". Correcting");
@@ -162,7 +154,7 @@ export async function divisPurchases(ns) {
         funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
-      if ((funds * 0.2) / (divisions.length) >= warehouseCost) {
+      if ((funds * 0.01) / (divisions.length) >= warehouseCost) {
         ns.print("upgrading warehouses for all cities in " + division);
         for (const city of cities) {
           ns.corporation.upgradeWarehouse(division, city);
@@ -284,12 +276,12 @@ export function tobaccoProdGo(ns) {
   const tobaccoDiv = "CamelCorp";
   const prodName = "Tobacco v";
   const prodMax = ns.corporation.hasResearched(tobaccoDiv, "uPgrade: Capacity.I") ? 4 : 3;
-  let products = ns.corporation.getDivision.products;
+  let products = ns.corporation.getDivision(tobaccoDiv).products;
   let version = parseInt(products.at(-1).at(-1)) + 1;
-  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[2]).developmentProgress < 100) { return; }
-  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", product[2]).developmentProgress >= 100) { ns.corporation.discontinueProduct(tobaccoDiv, products[0]); }
+  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[prodMax - 1]).developmentProgress < 100) { return; }
+  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[prodMax - 1]).developmentProgress >= 100) { ns.corporation.discontinueProduct(tobaccoDiv, products[0]); }
   ns.corporation.makeProduct(tobaccoDiv, "Aevum", (prodName + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
-  ns.print("started new product in " + tobaccoDiv + ", product: " + (prodName + version) + " - funding: " + (Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2));
+  ns.print("started new product in " + tobaccoDiv + ", product: " + (prodName + version) + " - funding: " + ns.formatNumber((Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2), 3));
 }
 
 //function to purchase corp-wide upgrades.
@@ -362,7 +354,7 @@ export async function corpPurchases(ns) {
     ns.corporation.levelUpgrade(lvlUps[i]);
   }
   if (upgradeFunds * 0.01 > abcCost) { ns.print("buying " + lvlUps[8] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[8]); }
-  if (upgradeFunds * 0.01 > ns.corporation.getResearchCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); }
+  if (upgradeFunds * 0.01 > ns.corporation.getUpgradeLevelCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); }
 }
 
 /** @param {NS} ns */
@@ -374,6 +366,8 @@ export async function main(ns) {
     while (ns.corporation.getCorporation().state != "START") {
       //when you make your main script, put things you want to be done
       //potentially multiple times every cycle, like buying upgrades, here.
+      await corpPurchases(ns);
+      await divisPurchases(ns);
       await ns.sleep(0);
     }
 
@@ -381,13 +375,11 @@ export async function main(ns) {
       //same as above
       await ns.sleep(0);
     }
-    //await corpPurchases(ns); //corp and divisPurchases put here because infinity loop testing.
-    await divisPurchases(ns);
     //and to this part put things you want done exactly once per cycle
-    //setPrices(ns);
-    // tobaccoProdGo(ns);
-    // rAndD(ns);
-    // humanResources(ns)
+    setPrices(ns);
+    tobaccoProdGo(ns);
+    rAndD(ns);
+    humanResources(ns)
   }
 
 
