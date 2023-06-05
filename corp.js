@@ -12,6 +12,7 @@ export class Business {
   cities
   boostPhases
   stage
+  mats
   constructor(ns) {
     /**@type {NS} */
     this.ns = ns;
@@ -25,6 +26,7 @@ export class Business {
     this.boostStock = ["Hardware", "Robots", "AI Cores", "Real Estate"];
     this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight"];
     this.cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+    this.mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
 
     //Hardware, Robots, AI Cores, and Real Estate Numbers. tinkering expected
     this.boostPhases = [
@@ -47,7 +49,33 @@ export class Business {
   }
   //function to replicate smart supply and save money earlygame 
   dumbSupply() {
-    
+    if (this.ns.corporation.hasUnlock("Smart Supply")) { return; }
+    for (const division of this.ns.corporation.getCorporation().divisions) {
+      for (const city of this.cities) {
+        if (this.ns.corporation.getDivision(division).type == "Agriculture") {
+          const water = this.ns.corporation.getMaterial(division, city, this.mats[0]);
+          const food = this.ns.corporation.getMaterial(division, city, this.mats[1]);
+          const chemicals = this.ns.corporation.getMaterial(division, city, this.mats[3]);
+          if (food.productionAmount * 0.5 > water.stored * 3) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[0], ((food.productionAmount * 0.5) / 10));
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[0], 0); }
+          if (food.productionAmount * 0.2 > chemicals.stored * 3) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[3], ((food.productionAmount * 0.2) / 10));
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], 0); }
+        }
+        if (this.ns.corporation.getDivision(division).type == "Tobacco") {
+          const plants = this.ns.corporation.getMaterial(division, city, this.mats[2]);
+          const products = this.ns.corporation.getDivision(tobaccoName).products;
+          let prodproduction = 0;
+          for (const product of products) {
+            prodProduction += this.ns.corporation.getProduct(division, city, product).productionAmount;
+          }
+          if (prodProduction > plants.stored * 9) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[2], ((food.productionAmount * 0.2) / 10));
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[2], 0); }
+        }
+      }
+    }
   }
 
 
@@ -141,7 +169,7 @@ export class Business {
       case 12:
         //enter the main corp script below or remove/comment out ns.spawn if you don't have one
         this.ns.print("this is the part of the script that normally spawns the mid-endgame script. nothing happens right now.");
-        //ns.spawn("corp.js");
+        this.ns.spawn("buycorpstuff.js");
         break;
     }
   }
@@ -154,7 +182,8 @@ export class Business {
     this.stage[1] = 1;
     if (!this.ns.corporation.getCorporation().divisions.includes(this.agriName)) { this.ns.corporation.expandIndustry("Agriculture", this.agriName); }
     this.stage[1] = 2;
-    if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
+    //testing dumb supply function to replace smart supply and save 25 billion 
+    //if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
     this.stage[1] = 3;
     for (let city of this.cities) {
       if (!this.ns.corporation.getDivision(this.agriName).cities.includes(city)) { this.ns.corporation.expandCity(this.agriName, city); }
@@ -203,8 +232,8 @@ export class Business {
   //Wait till the employee stats are high enough and then go to the next stage
   employeeSatisfactionCheck() {
     this.ns.clearLog();
+    const avgs = [0, 0];
     for (const division of this.ns.corporation.getCorporation().divisions) {
-      const avgs = [0, 0];
       this.ns.print("   " + division);
       this.ns.print("");
       for (const city of this.ns.corporation.getDivision(division).cities) {
@@ -265,7 +294,7 @@ export class Business {
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
-      this.investNum ++;
+      this.investNum++;
     }
   }
 
@@ -385,6 +414,7 @@ export async function main(ns) {
     //and to this part put things you want done exactly once per cycle
     bus.teaParty();
     bus.checkStage();
+    bus.dumbSupply();
   }
 
 
