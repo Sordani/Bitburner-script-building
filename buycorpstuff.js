@@ -270,18 +270,107 @@ export function setPrices(ns) {
   }
 }
 
+//function to manage exports
+/** @param {NS} ns */
+export function marketPlace(ns) {
+  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+  const divNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp"];
+  for (const city of cities) {
+    if (ns.corporation.getCorporation().divisions.includes(divNames[1])) {
+      ns.corporation.exportMaterial(divNames[0], city, divNames[1], city, "Plants", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[2])) {
+      ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[3])) {
+      ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[2], city, divNames[3], city, "Water", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[5])) {
+      ns.corporation.exportMaterial(divNames[4], city, divNames[5], city, "Ore", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[6])) {
+      ns.corporation.exportMaterial(divNames[5], city, divNames[6], city, "Metal", "IPROD*(-1)");
+      for (let i = 0; i < ns.corporation.getCorporation().divisions.length; i++) {
+        switch (divNames[i]) {
+          case divNames[6]:
+            break;
+          case divNames[7]:
+          case divNames[8]:
+          case divNames[9]:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "IPROD*(-1)");
+            break;
+          default:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "EPROD/" + ((divNames.length * cities.length) * 10));
+            break;
+        }
+      }
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[7])) {
+        ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "IPROD*(-1)");
+      for (let i = 0; i < ns.corporation.getCorporation().divisions.length; i++) {
+        switch (divNames[i]) {
+          case divNames[7]:
+            break;
+          case divNames[8]:
+          case divNames[11]:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "AI Cores", "IPROD*(-1)");
+            break;
+          default:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "AI Cores", "EPROD/" + ((divNames.length * cities.length) * 5));
+            break;
+        }
+      }
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[8])) {
+      ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "IPROD*(-1)");
+      for (let i = 0; i < ns.corporation.getCorporation().divisions.length; i++) {
+        switch (divNames[i]) {
+          case divNames[8]:
+            break;
+          case divNames[11]:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "IPROD*(-1)");
+            break;
+          default:
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "EPROD/" + ((divNames.length * cities.length) * 10));
+            break;
+        }
+      }
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[9])) {
+      ns.corporation.exportMaterial(divNames[9], city, divNames[0], city, "Water", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[10])) {
+      ns.corporation.exportMaterial(divNames[3], city, divNames[10], city, "Chemicals", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[2], city, divNames[10], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[10], city, "Water", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[11])) {
+      ns.corporation.exportMaterial(divNames[0], city, divNames[11], city, "Food", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[10], city, divNames[11], city, "Drugs", "IPROD*(-1)");
+    }
+    if (ns.corporation.getCorporation().divisions.includes(divNames[12])) {
+      ns.corporation.exportMaterial(divNames[0], city, divNames[12], city, "Plants", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[12], city, divNames[11], city, "Food", "IPROD*(-1)");
+    }
+  }
+}
+
 //function to create tobacco products continuously
 /** @param {NS} ns */
-export function tobaccoProdGo(ns) {
-  const tobaccoDiv = "CamelCorp";
-  const prodName = "Tobacco v";
-  const prodMax = ns.corporation.hasResearched(tobaccoDiv, "uPgrade: Capacity.I") ? 4 : 3;
-  let products = ns.corporation.getDivision(tobaccoDiv).products;
-  let version = parseInt(products.at(-1).at(-1)) + 1;
-  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[prodMax - 1]).developmentProgress < 100) { return; }
-  if (products.length >= prodMax && ns.corporation.getProduct(tobaccoDiv, "Aevum", products[prodMax - 1]).developmentProgress >= 100) { ns.corporation.discontinueProduct(tobaccoDiv, products[0]); }
-  ns.corporation.makeProduct(tobaccoDiv, "Aevum", (prodName + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
-  ns.print("started new product in " + tobaccoDiv + ", product: " + (prodName + version) + " - funding: " + ns.formatNumber((Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2), 3));
+export function makeProd(ns) {
+  const divNames = ["CamelCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "PharmaCorp", "HeartCorp", "DelTacoCorp"];
+  const prodNames = ["Tobacco v", "Asus v", "Jarvis v", "Chappy v", "CureAll v", "Kaiser #", "DelTaco #"];
+  for (let i = 0; i < divNames.length; i++) {
+    const prodMax = ns.corporation.hasResearched(divNames[i], "uPgrade: Capacity.I") ? 4 : 3;
+    let products = ns.corporation.getDivision(divNames[i]).products;
+    let version = (ns.corporation.getDivision(divNames[i]).products.length > 0) ? parseInt(products.at(-1).at(-1)) + 1 : 1;
+    if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress < 100) { return; }
+    if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress >= 100) { ns.corporation.discontinueProduct(divNames[i], products[0]); }
+    ns.corporation.makeProduct(divNames[i], "Aevum", (prodNames[i] + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
+    ns.print("started new product in " + divNames[i] + ", product: " + (prodNames[i] + version) + " - funding: " + ns.formatNumber((Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2), 3));
+  }
 }
 
 //function to purchase corp-wide upgrades.
@@ -357,6 +446,100 @@ export async function corpPurchases(ns) {
   if (upgradeFunds * 0.01 > ns.corporation.getUpgradeLevelCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); }
 }
 
+//function to expand to other industries.
+/** @param {NS} ns */
+export function expansionPlan(ns) {
+  const funds = ns.corporation.getCorporation().funds;
+  const corpName = "TerraCorp";
+  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+  const divisionNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp"];
+  const divisionTypes = ["Agriculture", "Tobacco", "Spring Water", "Chemical", "Mining", "Refinery", "Computer Hardware", "Software", "Robotics", "Water Utilities","Pharmaceutical", "Healthcare", "Fishing", "Restaurant"];
+  if (funds >= 6e11 && ns.corporation.getCorporation().divisions.includes(divisionNames[1])) {
+    ns.corporation.expandIndustry(divisionTypes[2], divisionNames[2]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[2], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[2], cities[i]);
+    }
+  }
+  if (funds >= 7.5e11 & ns.corporation.getCorporation().divisions.includes(divisionNames[2])) {
+    ns.corporation.expandIndustry(divisionTypes[3], divisionNames[3]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[2], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[2], cities[i]);
+    }
+  }
+  if (funds >= 1e14 && ns.corporation.getCorporation().divisions.includes(divisionNames[3])) {
+    ns.corporation.expandIndustry(divisionTypes[4], divisionNames[4]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[4], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[4], cities[i]);
+    }
+  }
+  if (funds >= 1.5e14 && ns.corporation.getCorporation().divisions.includes(divisionNames[4])) {
+    ns.corporation.expandIndustry(divisionTypes[5], divisionNames[5]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[5], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[5], cities[i]);
+    }
+  }
+  if (funds >= 5e14 && ns.corporation.getCorporation().divisions.includes(divisionNames[5])) {
+    ns.corporation.expandIndustry(divisionTypes[6], divisionNames[6]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[6], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[6], cities[i]);
+    }
+  }
+  if (funds >= 7.5e14 && ns.corporation.getCorporation().divisions.includes(divisionNames[6])) {
+    ns.corporation.expandIndustry(divisionTypes[7], divisionNames[7]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[7], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[7], cities[i]);
+    }
+  }
+  if (funds >= 5e15 && ns.corporation.getCorporation().divisions.includes(divisionNames[7])) {
+    ns.corporation.expandIndustry(divisionTypes[8], divisionNames[8]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[8], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[8], cities[i]);
+    }
+  }
+  if (funds >= 2e16 && ns.corporation.getCorporation().divisions.includes(divisionNames[8])) {
+    ns.corporation.expandIndustry(divisionTypes[9], divisionNames[9]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[9], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[9], cities[i]);
+    }
+  }
+  if (funds >= 5e16 && ns.corporation.getCorporation().divisions.includes(divisionNames[9])) {
+    ns.corporation.expandIndustry(divisionTypes[10], divisionNames[10]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[10], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[10], cities[i]);
+    }
+  }
+  if (funds >= 7.5e16 && ns.corporation.getCorporation().divisions.includes(divisionNames[10])) {
+    ns.corporation.expandIndustry(divisionTypes[11], divisionNames[11]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[11], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[11], cities[i]);
+    }
+  }
+  if (funds >= 1e17 && ns.corporation.getCorporation().divisions.includes(divisionNames[11])) {
+    ns.corporation.expandIndustry(divisionTypes[12], divisionNames[12]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[12], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[12], cities[i]);
+    }
+  }
+  if (funds >= 2e17 && ns.corporation.getCorporation().divisions.includes(divisionNames[12])) {
+    ns.corporation.expandIndustry(divisionTypes[13], divisionNames[13]);
+    for (let i = 0; i < 5; i++) {
+      ns.corporation.expandCity(divisionNames[13], cities[i]);
+      ns.corporation.purchaseWarehouse(divisionNames[13], cities[i]);
+    }
+  }
+}
+
 /** @param {NS} ns */
 export async function main(ns) {
   ns.disableLog("ALL");
@@ -377,9 +560,11 @@ export async function main(ns) {
     }
     //and to this part put things you want done exactly once per cycle
     setPrices(ns);
-    tobaccoProdGo(ns);
+    makeProd(ns);
     rAndD(ns);
-    humanResources(ns)
+    humanResources(ns);
+    marketPlace(ns);
+    expansionPlan(ns);
   }
 
 
