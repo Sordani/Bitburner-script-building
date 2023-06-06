@@ -183,13 +183,13 @@ export class Business {
     if (!this.ns.corporation.getCorporation().divisions.includes(this.agriName)) { this.ns.corporation.expandIndustry("Agriculture", this.agriName); }
     this.stage[1] = 2;
     //** testing dumb supply function to replace smart supply and save 25 billion ** 
-    //if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
+    if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
     this.stage[1] = 3;
     for (let city of this.cities) {
       if (!this.ns.corporation.getDivision(this.agriName).cities.includes(city)) { this.ns.corporation.expandCity(this.agriName, city); }
       if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
       //** testing dumb supply **
-      //this.ns.corporation.setSmartSupply(this.agriName, city, true);
+      this.ns.corporation.setSmartSupply(this.agriName, city, true);
       while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 3);
       this.ns.corporation.sellMaterial(this.agriName, city, "Plants", "MAX", "MP");
@@ -241,11 +241,11 @@ export class Business {
         avgs[0] += this.ns.corporation.getOffice(division, city).avgMorale;
         avgs[1] += this.ns.corporation.getOffice(division, city).avgEnergy;
       }
-      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/95");
-      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/95");
+      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/98");
+      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/98");
       this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 95 && avgs[1] / 6 >= 95 && this.stage[1] > 0) {
+    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) {
       if (this.stage[0] == 1) {
         for (let city of this.cities) {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
@@ -415,7 +415,7 @@ export async function main(ns) {
     //and to this part put things you want done exactly once per cycle
     bus.teaParty();
     bus.checkStage();
-    bus.dumbSupply();
+    //bus.dumbSupply();
   }
 
 
