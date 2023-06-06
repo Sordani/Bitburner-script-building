@@ -4,7 +4,7 @@ export async function divisPurchases(ns) {
   const prodCity = "Aevum";
   const supportCities = ["Sector-12", "Chongqing", "New Tokyo", "Ishima", "Volhaven"]
   const divisions = ns.corporation.getCorporation().divisions
-  let funds = ns.corporation.getCorporation().funds * 0.75;
+  let funds = ns.corporation.getCorporation().funds * 0.5;
   for (const division of divisions) {
     if (ns.corporation.getDivision(division).makesProducts) {
       let advertCost = ns.corporation.getHireAdVertCost(division);
@@ -211,13 +211,13 @@ export function rAndD(ns) {
   for (const division of ns.corporation.getCorporation().divisions) {
     if (ns.corporation.getDivision(division).researchPoints > 12000 && !ns.corporation.hasResearched(division, rdNames[0])) { ns.print("purchasing research: " + rdNames[0] + " in " + division); ns.corporation.research(division, rdNames[0]); }
     if (!ns.corporation.hasResearched(division, rdNames[0])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 140000 && !ns.corporation.hasResearched(division, rdNames[2])) { ns.print("purchasing research: " + rdNames[2] + " in " + division); ns.corporation.research(division, rdNames[1]); ns.corporation.research(division, rdNames[2]); } else { return; }
+    if (ns.corporation.getDivision(division).researchPoints > 1.4e5 && !ns.corporation.hasResearched(division, rdNames[2])) { ns.print("purchasing research: " + rdNames[2] + " in " + division); ns.corporation.research(division, rdNames[1]); ns.corporation.research(division, rdNames[2]); } else { return; }
     if (!ns.corporation.hasResearched(division, rdNames[2])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[4])) { ns.print("purchasing research: " + rdNames[4] + " in " + division); ns.corporation.research(division, rdNames[3]); ns.corporation.research(division, rdNames[4]); }
+    if (ns.corporation.getDivision(division).researchPoints > 1.5e5 && !ns.corporation.hasResearched(division, rdNames[4])) { ns.print("purchasing research: " + rdNames[4] + " in " + division); ns.corporation.research(division, rdNames[3]); ns.corporation.research(division, rdNames[4]); }
     if (!ns.corporation.hasResearched(division, rdNames[4])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 150000 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.print("purchasing research: " + rdNames[6] + " in " + division); ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
+    if (ns.corporation.getDivision(division).researchPoints > 1.5e5 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.print("purchasing research: " + rdNames[6] + " in " + division); ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
     if (!ns.corporation.hasResearched(division, rdNames[6])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 100000 && !ns.corporation.hasResearched(division, rdNames[7])) { ns.print("purchasing research: " + rdNames[7] + " in " + division); ns.corporation.research(division, rdNames[7]); }
+    if (ns.corporation.getDivision(division).researchPoints > 1e5 && !ns.corporation.hasResearched(division, rdNames[7])) { ns.print("purchasing research: " + rdNames[7] + " in " + division); ns.corporation.research(division, rdNames[7]); }
     for (const name of rdNames) {
       if (ns.corporation.getDivision(division).researchPoints * 30 >= ns.corporation.getResearchCost(division, name) && !ns.corporation.hasResearched(division, name)) { ns.print("purchasing research: " + name + " in " + division); ns.corporation.research(division, name); }
     }
@@ -230,6 +230,7 @@ export function rAndD(ns) {
 //function to set prices
 /** @param {NS} ns */
 export function setPrices(ns) {
+  //need to include logic to sell required products if they get too high in the storage.
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
   const mats = ["Water", "Food", "Plants", "Hardware", "Chemicals", "Drugs", "Ore", "Metal"];
   for (const division of ns.corporation.getCorporation().divisions) {
@@ -376,7 +377,7 @@ export function makeProd(ns) {
 //function to purchase corp-wide upgrades.
 /** @param {NS} ns */
 export async function corpPurchases(ns) {
-  const upgradeFunds = ns.corporation.getCorporation().funds * 0.2;
+  const upgradeFunds = ns.corporation.getCorporation().funds;
   const lvlUps = [
     "Smart Factories",
     "Smart Storage",
@@ -434,16 +435,16 @@ export async function corpPurchases(ns) {
   }
   const employeeUpCost = ns.corporation.getUpgradeLevelCost(lvlUps[4]) + ns.corporation.getUpgradeLevelCost(lvlUps[5]) + ns.corporation.getUpgradeLevelCost(lvlUps[6]) + ns.corporation.getUpgradeLevelCost(lvlUps[7]);
   ns.print("employeeUpCost: " + ns.formatNumber(employeeUpCost, 3) + " // funds allowed: " + ns.formatNumber(upgradeFunds, 3));
-  if (upgradeFunds * 2.5 > wilsonCost) { ns.print("buying " + lvlUps[3] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[3]); return; }
+  if (upgradeFunds > wilsonCost) { ns.print("buying " + lvlUps[3] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[3]); return; }
   if (upgradeFunds < employeeUpCost) { return; }
   if (employeeUpCost / 2 > labCost) { ns.print("buying " + lvlUps[9] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[9]); return; }
   if (employeeUpCost > factCost) { ns.print("buying " + lvlUps[0] + " and " + lvlUps[1] + "upgrades"); ns.corporation.levelUpgrade(lvlUps[0]); ns.corporation.levelUpgrade(lvlUps[1]); return; }
+  if (upgradeFunds > abcCost) { ns.print("buying " + lvlUps[8] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[8]); }
+  if (upgradeFunds * 0.5 > ns.corporation.getUpgradeLevelCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); return; }
   ns.print("buying employee augment upgrades")
   for (let i = 4; i < 8; i++) {
     ns.corporation.levelUpgrade(lvlUps[i]);
   }
-  if (upgradeFunds * 0.01 > abcCost) { ns.print("buying " + lvlUps[8] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[8]); }
-  if (upgradeFunds * 0.01 > ns.corporation.getUpgradeLevelCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); }
 }
 
 //function to expand to other industries.
