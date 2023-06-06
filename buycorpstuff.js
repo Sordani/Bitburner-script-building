@@ -541,35 +541,36 @@ export function expansionPlan(ns) {
 
 //function to replicate smart supply and save money earlygame 
 export function dumbSupply(ns) {
-  if (ns.corporation.hasUnlock("Smart Supply")) { return; }
-  const mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
-  for (const division of ns.corporation.getCorporation().divisions) {
-    for (const city of cities) {
-      if (ns.corporation.getDivision(division).type == "Agriculture") {
-        const water = ns.corporation.getMaterial(division, city, mats[0]);
-        const food = ns.corporation.getMaterial(division, city, mats[1]);
-        const chemicals = ns.corporation.getMaterial(division, city, mats[3]);
-        if (food.productionAmount * 0.5 > water.stored * 3) {
-          ns.corporation.buyMaterial(division, city, mats[0], ((food.productionAmount * 0.5) / 10));
-        } else { ns.corporation.buyMaterial(division, city, mats[0], 0); }
-        if (food.productionAmount * 0.2 > chemicals.stored * 3) {
-          ns.corporation.buyMaterial(division, city, mats[3], ((food.productionAmount * 0.2) / 10));
-        } else { ns.corporation.buyMaterial(division, city, mats[3], 0); }
-      }
-      if (ns.corporation.getDivision(division).type == "Tobacco") {
-        const plants = ns.corporation.getMaterial(division, city, mats[2]);
-        const products = ns.corporation.getDivision(tobaccoName).products;
-        let prodproduction = 0;
-        for (const product of products) {
-          prodProduction += ns.corporation.getProduct(division, city, product).productionAmount;
+    if (ns.corporation.hasUnlock("Smart Supply")) { return; }
+    const mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
+    const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+    for (const division of ns.corporation.getCorporation().divisions) {
+      for (const city of cities) {
+        if (ns.corporation.getDivision(division).type == "Agriculture") {
+          const water = ns.corporation.getMaterial(division, city, mats[0]);
+          const food = ns.corporation.getMaterial(division, city, mats[1]);
+          const chemicals = ns.corporation.getMaterial(division, city, mats[3]);
+          if (Math.max(food.productionAmount * 0.5, 500) * 0.5 < water.stored * 3) {
+            ns.corporation.buyMaterial(division, city, mats[0], 0);
+          } else { ns.corporation.buyMaterial(division, city, mats[0], Math.max(((food.productionAmount * 0.5) / 10), 500)); }
+          if (Math.max(food.productionAmount * 0.2, 500) < chemicals.stored * 3) {
+            ns.corporation.buyMaterial(division, city, mats[3], 0);
+          } else { ns.corporation.buyMaterial(division, city, mats[3], Math.Max(((food.productionAmount * 0.2) / 10), 500)); }
         }
-        if (prodProduction > plants.stored * 9) {
-          ns.corporation.buyMaterial(division, city, mats[2], ((food.productionAmount * 0.2) / 10));
-        } else { ns.corporation.buyMaterial(division, city, mats[2], 0); }
+        if (ns.corporation.getDivision(division).type == "Tobacco") {
+          const plants = ns.corporation.getMaterial(division, city, mats[2]);
+          const products = ns.corporation.getDivision(tobaccoName).products;
+          let prodProduction = 0;
+          for (const product of products) {
+            prodProduction += ns.corporation.getProduct(division, city, product).productionAmount;
+          }
+          if (Math.max(prodProduction, 1500) < plants.stored * 9) {
+            ns.corporation.buyMaterial(division, city, mats[2], 0);
+          } else { ns.corporation.buyMaterial(division, city, mats[2], Math.max(((food.productionAmount * 0.2) / 10), 1500)); }
+        }
       }
     }
   }
-}
 
 /** @param {NS} ns */
 export async function main(ns) {
