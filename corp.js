@@ -56,23 +56,23 @@ export class Business {
           const water = this.ns.corporation.getMaterial(division, city, this.mats[0]);
           const food = this.ns.corporation.getMaterial(division, city, this.mats[1]);
           const chemicals = this.ns.corporation.getMaterial(division, city, this.mats[3]);
-          if (food.productionAmount * 0.5 > water.stored * 3) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[0], ((food.productionAmount * 0.5) / 10));
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[0], 0); }
-          if (food.productionAmount * 0.2 > chemicals.stored * 3) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[3], ((food.productionAmount * 0.2) / 10));
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], 0); }
+          if (Math.max(food.productionAmount * 0.5, 500) < water.stored * 3) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[0], 0);
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[0], Math.max(((food.productionAmount * 0.5) / 10), 500)); }
+          if (Math.max(food.productionAmount * 0.2, 500) < chemicals.stored * 3) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[3], 0);
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], Math.Max(((food.productionAmount * 0.2) / 10), 500)); }
         }
         if (this.ns.corporation.getDivision(division).type == "Tobacco") {
           const plants = this.ns.corporation.getMaterial(division, city, this.mats[2]);
           const products = this.ns.corporation.getDivision(tobaccoName).products;
-          let prodproduction = 0;
+          let prodProduction = 0;
           for (const product of products) {
             prodProduction += this.ns.corporation.getProduct(division, city, product).productionAmount;
           }
-          if (prodProduction > plants.stored * 9) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[2], ((food.productionAmount * 0.2) / 10));
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[2], 0); }
+          if (Math.max(prodProduction, 1500) < plants.stored * 9) {
+            this.ns.corporation.buyMaterial(division, city, this.mats[2], 0);
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[2], Math.max(((food.productionAmount * 0.2) / 10), 1500)); }
         }
       }
     }
