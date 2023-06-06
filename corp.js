@@ -61,7 +61,7 @@ export class Business {
           } else { this.ns.corporation.buyMaterial(division, city, this.mats[0], Math.max(((food.productionAmount * 0.5) / 10), 5)); }
           if (Math.max(food.productionAmount * 0.2, 50) < chemicals.stored * 3) {
             this.ns.corporation.buyMaterial(division, city, this.mats[3], 0);
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], Math.Max(((food.productionAmount * 0.2) / 10), 5)); }
+          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], Math.max(((food.productionAmount * 0.2) / 10), 5)); }
         }
         if (this.ns.corporation.getDivision(division).type == "Tobacco") {
           const plants = this.ns.corporation.getMaterial(division, city, this.mats[2]);
