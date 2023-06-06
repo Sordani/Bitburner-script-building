@@ -550,12 +550,12 @@ export function dumbSupply(ns) {
           const water = ns.corporation.getMaterial(division, city, mats[0]);
           const food = ns.corporation.getMaterial(division, city, mats[1]);
           const chemicals = ns.corporation.getMaterial(division, city, mats[3]);
-          if (Math.max(food.productionAmount * 0.5, 500) * 0.5 < water.stored * 3) {
+          if (Math.max(food.productionAmount * 0.5, 50) * 0.5 < water.stored * 3) {
             ns.corporation.buyMaterial(division, city, mats[0], 0);
-          } else { ns.corporation.buyMaterial(division, city, mats[0], Math.max(((food.productionAmount * 0.5) / 10), 500)); }
-          if (Math.max(food.productionAmount * 0.2, 500) < chemicals.stored * 3) {
+          } else { ns.corporation.buyMaterial(division, city, mats[0], Math.max(((food.productionAmount * 0.5) / 10), 5)); }
+          if (Math.max(food.productionAmount * 0.2, 50) < chemicals.stored * 3) {
             ns.corporation.buyMaterial(division, city, mats[3], 0);
-          } else { ns.corporation.buyMaterial(division, city, mats[3], Math.Max(((food.productionAmount * 0.2) / 10), 500)); }
+          } else { ns.corporation.buyMaterial(division, city, mats[3], Math.max(((food.productionAmount * 0.2) / 10), 5)); }
         }
         if (ns.corporation.getDivision(division).type == "Tobacco") {
           const plants = ns.corporation.getMaterial(division, city, mats[2]);
@@ -564,9 +564,9 @@ export function dumbSupply(ns) {
           for (const product of products) {
             prodProduction += ns.corporation.getProduct(division, city, product).productionAmount;
           }
-          if (Math.max(prodProduction, 1500) < plants.stored * 9) {
+          if (Math.max(prodProduction, 150) < plants.stored * 9) {
             ns.corporation.buyMaterial(division, city, mats[2], 0);
-          } else { ns.corporation.buyMaterial(division, city, mats[2], Math.max(((food.productionAmount * 0.2) / 10), 1500)); }
+          } else { ns.corporation.buyMaterial(division, city, mats[2], Math.max(((food.productionAmount * 0.2) / 10), 15)); }
         }
       }
     }
