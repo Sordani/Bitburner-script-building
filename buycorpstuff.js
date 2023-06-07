@@ -57,6 +57,14 @@ export async function divisPurchases(ns) {
         }
         if (ns.corporation.getWarehouse(division, prodCity).level < z) { ns.corporation.upgradeWarehouse(division, prodCity); }
         funds = ns.corporation.getCorporation().funds * 0.75;
+        supportWHs = [];
+        for (const city of supportCities) {
+          supportWHs.push(ns.corporation.getUpgradeWarehouseCost(division, city));
+        }
+        supportWHCost = 0;
+        for (let i = 0; i < supportWHs.length; i++) {
+          supportWHCost += supportWHs[i];
+        }
         await ns.sleep(0);
       }
       if ((funds * 0.8) / divisions.length >= advertCost || (funds * 0.8) / divisions.length >= officeExpCost) {
@@ -176,6 +184,7 @@ export function humanResources(ns) {
   const jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development", "Intern"];
   for (const division of ns.corporation.getCorporation().divisions) {
     if (ns.corporation.getDivision(division).makesProducts) {
+      if (ns.corporation.getOffice(division, prodCity).size > ns.corporation.getOffice(division, prodCity).numEmployees) { while (ns.corporation.hireEmployee(division, prodCity)) { } }
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[4], 0);
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[5], 0);
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[0], Math.floor(ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
@@ -183,22 +192,26 @@ export function humanResources(ns) {
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[2], Math.floor(0.5 * ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[3], Math.ceil(ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
       for (const city of supportCities) {
+        if (ns.corporation.getOffice(division, city).size > ns.corporation.getOffice(division, city).numEmployees) { while (ns.corporation.hireEmployee(division, city)) { } }
         ns.corporation.setAutoJobAssignment(division, city, jobs[5], 0);
         ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[1], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
+        if (ns.corporation.getOffice(division, city).numEmployees <= 3) { continue; }
         ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[4], (ns.corporation.getOffice(division, city).numEmployees - (ns.corporation.getOffice(division, city).numEmployees / 5)));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[4], Math.floor((ns.corporation.getOffice(division, city).numEmployees - (ns.corporation.getOffice(division, city).numEmployees / 5))));
       }
     }
     else {
       for (const city of cities) {
+        if (ns.corporation.getOffice(division, city).size > ns.corporation.getOffice(division, city).numEmployees) { while (ns.corporation.hireEmployee(division, city)) { } }
         ns.corporation.setAutoJobAssignment(division, city, jobs[5], 0);
         ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[1], Math.floor(1.5 * ns.corporation.getOffice(division, city).numEmployees / 5));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.floor(0.5 * ns.corporation.getOffice(division, city).numEmployees / 5));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.ceil(ns.corporation.getOffice(division, city).numEmployees / 5));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 10));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
         ns.corporation.setAutoJobAssignment(division, city, jobs[4], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
+        let engNum = 0;
+        try { while (ns.corporation.setAutoJobAssignment(division, city, jobs[1], engNum++)) { } } catch { }
       }
     }
   }
@@ -207,23 +220,25 @@ export function humanResources(ns) {
 //function to spend research points
 /** @param {NS} ns */
 export function rAndD(ns) {
-  const rdNames = ["Hi-Tech R&D Laboratory", "Market-TA.I", "Market-TA.II", "Automatic Drug Administration", "Go-Juice", "Overclock", "Sti.mu", "CPH4 Injections", "Drones", "Drones - Assembly", "Drones - Transport", "Self-Correcting Assemblers", "AutoBrew", "AutoPartyManager", "uPgrade: Fulcrum", "uPgrade: Capacity.I", "uPgrade:Dashboard"];
+  const rdNames = ["Hi-Tech R&D Laboratory", "Market-TA.I", "Market-TA.II", "Automatic Drug Administration", "Go-Juice", "Overclock", "Sti.mu", "CPH4 Injections", "Drones", "Drones - Assembly", "Drones - Transport", "Self-Correcting Assemblers", "AutoBrew", "AutoPartyManager"];
   const prodrdNames = ["uPgrade: Fulcrum", "uPgrade: Capacity.I", "uPgrade: Dashboard"];
   for (const division of ns.corporation.getCorporation().divisions) {
     if (ns.corporation.getDivision(division).researchPoints > 12000 && !ns.corporation.hasResearched(division, rdNames[0])) { ns.print("purchasing research: " + rdNames[0] + " in " + division); ns.corporation.research(division, rdNames[0]); }
-    if (!ns.corporation.hasResearched(division, rdNames[0])) { return; }
-    if (ns.corporation.getDivision(division).researchPoints > 1.4e5 && !ns.corporation.hasResearched(division, rdNames[2])) { ns.print("purchasing research: " + rdNames[2] + " in " + division); ns.corporation.research(division, rdNames[1]); ns.corporation.research(division, rdNames[2]); } else { return; }
-    if (!ns.corporation.hasResearched(division, rdNames[2])) { return; }
+    if (!ns.corporation.hasResearched(division, rdNames[0])) { continue; }
+    if (ns.corporation.getDivision(division).researchPoints > 1.4e5 && !ns.corporation.hasResearched(division, rdNames[2])) { ns.print("purchasing research: " + rdNames[2] + " in " + division); ns.corporation.research(division, rdNames[1]); ns.corporation.research(division, rdNames[2]); }
+    if (!ns.corporation.hasResearched(division, rdNames[2])) { continue; }
     if (ns.corporation.getDivision(division).researchPoints > 1.5e5 && !ns.corporation.hasResearched(division, rdNames[4])) { ns.print("purchasing research: " + rdNames[4] + " in " + division); ns.corporation.research(division, rdNames[3]); ns.corporation.research(division, rdNames[4]); }
-    if (!ns.corporation.hasResearched(division, rdNames[4])) { return; }
+    if (!ns.corporation.hasResearched(division, rdNames[4])) { continue; }
     if (ns.corporation.getDivision(division).researchPoints > 1.5e5 && !ns.corporation.hasResearched(division, rdNames[6])) { ns.print("purchasing research: " + rdNames[6] + " in " + division); ns.corporation.research(division, rdNames[5]); ns.corporation.research(division, rdNames[6]); }
-    if (!ns.corporation.hasResearched(division, rdNames[6])) { return; }
+    if (!ns.corporation.hasResearched(division, rdNames[6])) { continue; }
     if (ns.corporation.getDivision(division).researchPoints > 1e5 && !ns.corporation.hasResearched(division, rdNames[7])) { ns.print("purchasing research: " + rdNames[7] + " in " + division); ns.corporation.research(division, rdNames[7]); }
     for (const name of rdNames) {
-      if (ns.corporation.getDivision(division).researchPoints * 30 >= ns.corporation.getResearchCost(division, name) && !ns.corporation.hasResearched(division, name)) { ns.print("purchasing research: " + name + " in " + division); ns.corporation.research(division, name); }
+      if (ns.corporation.getDivision(division).researchPoints >= ns.corporation.getResearchCost(division, name) * 30 && !ns.corporation.hasResearched(division, name)) { ns.print("purchasing research: " + name + " in " + division); ns.corporation.research(division, name); }
     }
-    if (ns.corporation.getDivision(division).makesProducts && ns.corporation.getDivision(division).researchPoints * 10 >= (ns.corporation.getResearchCost(prodrdNames[0]) * 3.5)) {
-      for (const name of prodrdNames) { ns.print("purchasing research: " + name + " in " + division); ns.corporation.research(division, name); }
+    if (ns.corporation.getDivision(division).makesProducts) {
+      if (ns.corporation.getDivision(division).researchPoints >= (ns.corporation.getResearchCost(division, prodrdNames[0]) * 3.5) * 30) {
+        for (const name of prodrdNames) { ns.print("purchasing research: " + name + " in " + division); ns.corporation.research(division, name); }
+      }
     }
   }
 }
@@ -233,7 +248,7 @@ export function rAndD(ns) {
 export function setPrices(ns) {
   //need to include logic to sell required products if they get too high in the storage.
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
-  const mats = ["Water", "Food", "Plants", "Hardware", "Chemicals", "Drugs", "Ore", "Metal"];
+  const mats = ["Water", "Food", "Plants", "Hardware", "Chemicals", "Drugs", "Ore", "Metal", "Hardware", "Robots", "AI Cores", "Real Estate"];
   for (const division of ns.corporation.getCorporation().divisions) {
     for (const city of cities) {
       if (ns.corporation.getDivision(division).makesProducts) {
@@ -275,26 +290,35 @@ export function setPrices(ns) {
 //function to manage exports
 /** @param {NS} ns */
 export function marketPlace(ns) {
-  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
   const divNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp", "JeffGoldblumCorp"];
+  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+  const mats = ["Food", "Plants", "Water", "Chemicals", "Drugs", "Ore", "Metal", "Hardware", "AI Cores", "Robots", "Real Estate"];
   const divisions = ns.corporation.getCorporation().divisions;
   for (const city of cities) {
+    for (const mat of mats) { //this clears existing imports because the current game will allow infinite duplicates.
+      for (const div of divisions) {
+        const exports = ns.corporation.getMaterial(div, city, mat).exports;
+        for (const exp of exports) {
+          ns.corporation.cancelExportMaterial(div, city, exp.division, exp.city, mat, exp.amount);
+        }
+      }
+    }
     if (divisions.includes(divNames[1])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[1], city, "Plants", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[1], city, "Plants", "(IINV+IPROD)*(-1)"); //"(IINV+IPROD)*(-1)" 
     }
     if (divisions.includes(divNames[2])) {
-      ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[3])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[2], city, divNames[3], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[2], city, divNames[3], city, "Water", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[5])) {
-      ns.corporation.exportMaterial(divNames[4], city, divNames[5], city, "Ore", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[4], city, divNames[5], city, "Ore", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[6])) {
-      ns.corporation.exportMaterial(divNames[5], city, divNames[6], city, "Metal", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[5], city, divNames[6], city, "Metal", "(IINV+IPROD)*(-1)");
       for (let i = 0; i < divisions.length; i++) {
         switch (divNames[i]) {
           case divNames[6]:
@@ -302,7 +326,7 @@ export function marketPlace(ns) {
           case divNames[7]:
           case divNames[8]:
           case divNames[9]:
-            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "IPROD*(-1)");
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)");
             break;
           default:
             ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
@@ -311,29 +335,27 @@ export function marketPlace(ns) {
       }
     }
     if (divisions.includes(divNames[7])) {
-      ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "IPROD*(-1)");
       for (let i = 0; i < divisions.length; i++) {
         switch (divNames[i]) {
           case divNames[7]:
             break;
           case divNames[8]:
-          case divNames[11]:
-            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "AI Cores", "IPROD*(-1)");
+            ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(IINV+IPROD)*(-1)");
             break;
           default:
-            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * cities.length) * 5));
+            ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * cities.length) * 5));
             break;
         }
       }
     }
     if (divisions.includes(divNames[8])) {
-      ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "(IINV+IPROD)*(-1)");
       for (let i = 0; i < divisions.length; i++) {
         switch (divNames[i]) {
           case divNames[8]:
             break;
           case divNames[11]:
-            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "IPROD*(-1)");
+            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)");
             break;
           default:
             ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
@@ -342,33 +364,34 @@ export function marketPlace(ns) {
       }
     }
     if (divisions.includes(divNames[9])) {
-      ns.corporation.exportMaterial(divNames[9], city, divNames[0], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[0], city, "Water", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[3], city, "Water", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[10])) {
-      ns.corporation.exportMaterial(divNames[3], city, divNames[10], city, "Chemicals", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[2], city, divNames[10], city, "Water", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[9], city, divNames[10], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[3], city, divNames[10], city, "Chemicals", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[2], city, divNames[10], city, "Water", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[10], city, "Water", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[11])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[11], city, "Food", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[10], city, divNames[11], city, "Drugs", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[11], city, "Food", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[10], city, divNames[11], city, "Drugs", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[12])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[12], city, "Plants", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[12], city, divNames[11], city, "Food", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[12], city, "Plants", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[12], city, divNames[11], city, "Food", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[13])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[13], city, "Food", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[12], city, divNames[13], city, "Food", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[3], city, divNames[13], city, "Water", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[9], city, divNames[13], city, "Water", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[12], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[3], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[14])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[14], city, "Plants", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[6], city, divNames[14], city, "Hardware", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[3], city, divNames[14], city, "Water", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[9], city, divNames[14], city, "Water", "IPROD*(-1)");
-      ns.corporation.exportMaterial(divNames[5], city, divNames[14], city, "Metal", "IPROD*(-1)");
+      ns.corporation.exportMaterial(divNames[0], city, divNames[14], city, "Plants", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[6], city, divNames[14], city, "Hardware", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[3], city, divNames[14], city, "Water", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[9], city, divNames[14], city, "Water", "(IINV+IPROD)*(-1)");
+      ns.corporation.exportMaterial(divNames[5], city, divNames[14], city, "Metal", "(IINV+IPROD)*(-1)");
       for (let i = 0; i < divisions.length; i++) {
         switch (divNames[i]) {
           case divNames[14]:
@@ -465,7 +488,7 @@ export async function corpPurchases(ns) {
   if (upgradeFunds < employeeUpCost) { return; }
   if (employeeUpCost / 2 > labCost) { ns.print("buying " + lvlUps[9] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[9]); return; }
   if (employeeUpCost > factCost) { ns.print("buying " + lvlUps[0] + " and " + lvlUps[1] + "upgrades"); ns.corporation.levelUpgrade(lvlUps[0]); ns.corporation.levelUpgrade(lvlUps[1]); return; }
-  if (upgradeFunds > abcCost) { ns.print("buying " + lvlUps[8] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[8]); }
+  if (upgradeFunds > abcCost) { ns.print("buying " + lvlUps[8] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[8]); return; }
   if (upgradeFunds * 0.5 > ns.corporation.getUpgradeLevelCost(lvlUps[2])) { ns.print("buying " + lvlUps[2] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[2]); return; }
   ns.print("buying employee augment upgrades")
   for (let i = 4; i < 8; i++) {
