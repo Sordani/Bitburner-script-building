@@ -241,11 +241,11 @@ export class Business {
         avgs[0] += this.ns.corporation.getOffice(division, city).avgMorale;
         avgs[1] += this.ns.corporation.getOffice(division, city).avgEnergy;
       }
-      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/98");
-      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/98");
+      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/95");
+      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/95");
       this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) {
+    if (avgs[0] / 6 >= 95 && avgs[1] / 6 >= 95 && this.stage[1] > 0) {
       if (this.stage[0] == 1) {
         for (let city of this.cities) {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
