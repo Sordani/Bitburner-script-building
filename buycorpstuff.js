@@ -137,7 +137,7 @@ export async function divisPurchases(ns) {
         ns.print("found inbalance in warehouseUps for " + division + ". Correcting");
         ns.print("warehouseUps: " + warehouseUps);
         if (funds < warehouseUps) { ns.print("not enough funds to correct. awaiting income."); return; }
-        for (city of cities) {
+        for (const city of cities) {
           while (ns.corporation.getWarehouse(division, city).level < z) {
             ns.corporation.upgradeWarehouse(division, city);
             await ns.sleep(0);
