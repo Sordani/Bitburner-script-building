@@ -263,8 +263,9 @@ export function setPrices(ns) {
             ns.corporation.setProductMarketTA2(division, prod, true);
           } else {
             let x = 1;
-            if (prodData.desiredSellPrice.at(-1) != null && prodData.desiredSellPrice.at(-1) > 0) {
-              x = prodData.desiredSellPrice.at(-1);
+            if (typeof prodData.desiredSellPrice === "string") {
+              if (parseFloat(prodData.desiredSellPrice.slice(3)) != null && parseFloat(prodData.desiredSellPrice.slice(3)) > 0) {
+              x = parseFloat(prodData.desiredSellPrice.slice(3));
               if (prodData.stored === 0) {
                 x *= 2;
               } else {
@@ -273,6 +274,7 @@ export function setPrices(ns) {
                 const xMult = Math.max(0.33, Math.sqrt(prodData.actualSellAmount / desired));
                 x *= xMult;
               }
+            }
             }
             if (!x > 0) { ns.tprint("x tried to be " + x + " for " + prod + " in " + division + ", " + city + ". correcting to 1"); x = 1; }
             ns.print("setting price for " + division + ", " + city + ", " + prod + ", for MAX and MP*" + x);
@@ -521,43 +523,42 @@ export function expansionPlan(ns) {
       }
     }
   }
-  if (funds > 1e40 && !ns.corporation.getCorporation().public) { 
+  if (funds > 1e40 && !ns.corporation.getCorporation().public) {
     if (!ns.corporation.hasUnlock("Government Partnership")) { ns.corporation.purchaseUnlock("Government Partnership"); }
     if (!ns.corporation.hasUnlock("Shady Accounting")) { ns.corporation.purchaseUnlock("Shady Accounting"); }
-    ns.corporation.goPublic(0); 
-    ns.corporation.issueDividends(0.001); 
-    }
+    ns.corporation.goPublic(0);
+    ns.corporation.issueDividends(0.001);
+  }
 }
 
 //function to replicate smart supply and save money earlygame 
 /** @param {NS} ns */
 export function dumbSupply(ns) {
   if (ns.corporation.hasUnlock("Smart Supply")) { return; }
-  const mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
-  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
-  for (const division of ns.corporation.getCorporation().divisions) {
-    for (const city of cities) {
-      if (ns.corporation.getDivision(division).type == "Agriculture") {
-        const water = ns.corporation.getMaterial(division, city, mats[0]);
-        const food = ns.corporation.getMaterial(division, city, mats[1]);
-        const chemicals = ns.corporation.getMaterial(division, city, mats[3]);
-        if (Math.max(food.productionAmount * 0.5, 50) * 0.5 < water.stored * 3) {
-          ns.corporation.buyMaterial(division, city, mats[0], 0);
-        } else { ns.corporation.buyMaterial(division, city, mats[0], Math.max(((food.productionAmount * 0.5) / 10), 5)); }
-        if (Math.max(food.productionAmount * 0.2, 50) < chemicals.stored * 3) {
-          ns.corporation.buyMaterial(division, city, mats[3], 0);
-        } else { ns.corporation.buyMaterial(division, city, mats[3], Math.max(((food.productionAmount * 0.2) / 10), 5)); }
-      }
-      if (ns.corporation.getDivision(division).type == "Tobacco") {
-        const plants = ns.corporation.getMaterial(division, city, mats[2]);
-        const products = ns.corporation.getDivision(tobaccoName).products;
-        let prodProduction = 0;
-        for (const product of products) {
-          prodProduction += ns.corporation.getProduct(division, city, product).productionAmount;
-        }
-        if (Math.max(prodProduction, 150) < plants.stored * 9) {
-          ns.corporation.buyMaterial(division, city, mats[2], 0);
-        } else { ns.corporation.buyMaterial(division, city, mats[2], Math.max(((food.productionAmount * 0.2) / 10), 15)); }
+  const divs = ns.corporation.getCorporation().divisions;
+  for (const divName of divs) {
+    const div = ns.corporation.getDivision(divName);
+    const industry = ns.corporation.getIndustryData(div.type);
+    for (const city of div.cities) {
+      const office = ns.corporation.getOffice(divName, city);
+      const opProd = office.employeeProductionByJob.Operations || 0;
+      const engrProd = office.employeeProductionByJob.Engineer || 0;
+      const mgmtProd = office.employeeProductionByJob.Management || 0;
+      const totalProd = opProd + engrProd + mgmtProd;
+      if (totalProd === 0) continue;
+      const mgmtFactor = 1 + mgmtProd / (1.2 * totalProd);
+      const prod = (Math.pow(opProd, 0.4) + Math.pow(engrProd, 0.3)) * mgmtFactor * 0.05;
+      const tProd =
+        prod *
+        div.productionMult *
+        (1 + ns.corporation.getUpgradeLevel("Smart Factories") * 3 / 100)
+        // * research multipliers, once I figure out how to access them.
+        ;
+      const required = industry.requiredMaterials;
+      for (const [mat, amount] of Object.entries(required)) {
+        const stored = ns.corporation.getMaterial(divName, city, mat).stored / 10;
+        const needed = Math.max(amount * tProd - stored, 0);
+        ns.corporation.buyMaterial(divName, city, mat, needed);
       }
     }
   }
