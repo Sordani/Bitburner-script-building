@@ -49,30 +49,31 @@ export class Business {
   }
   //function to replicate smart supply and save money earlygame 
   dumbSupply() {
-    if (this.ns.corporation.hasUnlock("Smart Supply")) { return; }
-    for (const division of this.ns.corporation.getCorporation().divisions) {
-      for (const city of this.cities) {
-        if (this.ns.corporation.getDivision(division).type == "Agriculture") {
-          const water = this.ns.corporation.getMaterial(division, city, this.mats[0]);
-          const food = this.ns.corporation.getMaterial(division, city, this.mats[1]);
-          const chemicals = this.ns.corporation.getMaterial(division, city, this.mats[3]);
-          if (Math.max(food.productionAmount * 0.5, 50) < water.stored * 3) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[0], 0);
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[0], Math.max(((food.productionAmount * 0.5) / 10), 5)); }
-          if (Math.max(food.productionAmount * 0.2, 50) < chemicals.stored * 3) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[3], 0);
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[3], Math.max(((food.productionAmount * 0.2) / 10), 5)); }
-        }
-        if (this.ns.corporation.getDivision(division).type == "Tobacco") {
-          const plants = this.ns.corporation.getMaterial(division, city, this.mats[2]);
-          const products = this.ns.corporation.getDivision(tobaccoName).products;
-          let prodProduction = 0;
-          for (const product of products) {
-            prodProduction += this.ns.corporation.getProduct(division, city, product).productionAmount;
-          }
-          if (Math.max(prodProduction, 150) < plants.stored * 9) {
-            this.ns.corporation.buyMaterial(division, city, this.mats[2], 0);
-          } else { this.ns.corporation.buyMaterial(division, city, this.mats[2], Math.max(((food.productionAmount * 0.2) / 10), 15)); }
+    if (ns.corporation.hasUnlock("Smart Supply")) { return; }
+    const divs = ns.corporation.getCorporation().divisions;
+    for (const divName of divs) {
+      const div = ns.corporation.getDivision(divName);
+      const industry = ns.corporation.getIndustryData(div.type);
+      for (const city of div.cities) {
+        const office = ns.corporation.getOffice(divName, city);
+        const opProd = office.employeeProductionByJob.Operations || 0;
+        const engrProd = office.employeeProductionByJob.Engineer || 0;
+        const mgmtProd = office.employeeProductionByJob.Management || 0;
+        const totalProd = opProd + engrProd + mgmtProd;
+        if (totalProd === 0) continue;
+        const mgmtFactor = 1 + mgmtProd / (1.2 * totalProd);
+        const prod = (Math.pow(opProd, 0.4) + Math.pow(engrProd, 0.3)) * mgmtFactor * 0.05;
+        const tProd =
+          prod *
+          div.productionMult *
+          (1 + ns.corporation.getUpgradeLevel("Smart Factories") * 3 / 100)
+          // * research multipliers, once I figure out how to access them.
+          ;
+        const required = industry.requiredMaterials;
+        for (const [mat, amount] of Object.entries(required)) {
+          const stored = ns.corporation.getMaterial(divName, city, mat).stored / 10;
+          const needed = Math.max(amount * tProd - stored, 0);
+          ns.corporation.buyMaterial(divName, city, mat, needed);
         }
       }
     }
@@ -183,13 +184,13 @@ export class Business {
     if (!this.ns.corporation.getCorporation().divisions.includes(this.agriName)) { this.ns.corporation.expandIndustry("Agriculture", this.agriName); }
     this.stage[1] = 2;
     //** testing dumb supply function to replace smart supply and save 25 billion ** 
-    if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
+    //if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
     this.stage[1] = 3;
     for (let city of this.cities) {
       if (!this.ns.corporation.getDivision(this.agriName).cities.includes(city)) { this.ns.corporation.expandCity(this.agriName, city); }
       if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
       //** testing dumb supply **
-      this.ns.corporation.setSmartSupply(this.agriName, city, true);
+      //this.ns.corporation.setSmartSupply(this.agriName, city, true);
       while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
       this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 3);
       this.ns.corporation.sellMaterial(this.agriName, city, "Plants", "MAX", "MP");
@@ -241,11 +242,11 @@ export class Business {
         avgs[0] += this.ns.corporation.getOffice(division, city).avgMorale;
         avgs[1] += this.ns.corporation.getOffice(division, city).avgEnergy;
       }
-      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/95");
-      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/95");
+      this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/98");
+      this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/98");
       this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 95 && avgs[1] / 6 >= 95 && this.stage[1] > 0) {
+    if (avgs[0] / 6 >= 98 && avgs[1] / 6 >= 98 && this.stage[1] > 0) {
       if (this.stage[0] == 1) {
         for (let city of this.cities) {
           this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
@@ -415,7 +416,7 @@ export async function main(ns) {
     //and to this part put things you want done exactly once per cycle
     bus.teaParty();
     bus.checkStage();
-    //bus.dumbSupply();
+    bus.dumbSupply();
   }
 
 
