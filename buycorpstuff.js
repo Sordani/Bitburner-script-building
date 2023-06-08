@@ -265,19 +265,18 @@ export function setPrices(ns) {
             let x = 1;
             if (typeof prodData.desiredSellPrice === "string") {
               if (parseFloat(prodData.desiredSellPrice.slice(3)) != null && parseFloat(prodData.desiredSellPrice.slice(3)) > 0) {
-              x = parseFloat(prodData.desiredSellPrice.slice(3));
-              if (prodData.stored === 0) {
-                x *= 2;
-              } else {
-                const buffer = Math.max(prodData.productionAmount, 1) / 10;
-                const desired = prodData.stored - buffer == 0 ? prodData.stored - buffer : 1;
-                const xMult = Math.max(0.33, Math.sqrt(prodData.actualSellAmount / desired));
-                x *= xMult;
+                x = parseFloat(prodData.desiredSellPrice.slice(3));
+                if (prodData.stored === 0) {
+                  x *= 2;
+                } else {
+                  const buffer = Math.max(prodData.productionAmount, 1) / 10;
+                  const desired = prodData.stored - buffer == 0 ? prodData.stored - buffer : 1;
+                  const xMult = Math.max(0.33, Math.sqrt(prodData.actualSellAmount / desired));
+                  x *= xMult;
+                }
               }
             }
-            }
             if (!x > 0) { ns.tprint("x tried to be " + x + " for " + prod + " in " + division + ", " + city + ". correcting to 1"); x = 1; }
-            ns.print("setting price for " + division + ", " + city + ", " + prod + ", for MAX and MP*" + x);
             ns.corporation.sellProduct(division, city, prod, "MAX", "MP*" + x, true);
           }
         }
@@ -564,9 +563,33 @@ export function dumbSupply(ns) {
   }
 }
 
+//function to check all the warehouses in each division to make sure we have space to produce and sell
+/** @param {NS} ns */
+export function warehouseSafety(ns) {
+  const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
+  const mats = ["Food", "Plants", "Water", "Chemicals", "Drugs", "Ore", "Metal"];
+  for (const division of ns.corporation.getCorporation().divisions) {
+    for (const city of cities) {
+      const warehouse = ns.corporation.getWarehouse(division, city)
+      if (warehouse.sizeUsed >= warehouse.size * 0.95) {
+        let x = warehouse.sizeUsed
+        for (const mat of mats) {
+          const matData = ns.corporation.getMaterial(division, city, mat);
+          const matConst = ns.corporation.getMaterialData(mat);
+          const spaceTaken = matData.stored * matConst.size;
+          if (spaceTaken >= x * 0.1) {
+            ns.corporation.sellMaterial(division, city, mat, "MAX*0.5", "MP*0.1");
+          }
+        }
+      }
+    }
+  }
+}
+
 //function to make the log pretty
 /** @param {NS} ns */
 export function logPrint(ns) {
+  ns.resizeTail(300, 250);
   ns.clearLog();
   ns.print("Corporation: " + ns.corporation.getCorporation().name);
   ns.print("Divisions: " + ns.corporation.getCorporation().divisions.length);
@@ -574,7 +597,7 @@ export function logPrint(ns) {
   ns.print("Expenses: " + ns.formatNumber(ns.corporation.getCorporation().expenses));
   ns.print("Profit: " + ns.formatNumber(ns.corporation.getCorporation().revenue - ns.corporation.getCorporation().expenses));
   ns.print("Funds: " + ns.formatNumber(ns.corporation.getCorporation().funds, 3));
-  if (ns.corporation.getInvestmentOffer().round < 4 && !ns.corporation.getCorporation().public) { ns.print("investment offers accepted: " + (ns.corporation.getInvestmentOffer().round - 1)); } else if (!ns.corporation.getCorporation().public) { ns.print("All investment offers possible accepted."); } else { ns.print("Gone public: True"); }
+  if (ns.corporation.getInvestmentOffer().round < 4 && !ns.corporation.getCorporation().public) { ns.print("Investment offers accepted: " + (ns.corporation.getInvestmentOffer().round - 1)); } else if (!ns.corporation.getCorporation().public) { ns.print("All investment offers accepted."); } else { ns.print("Gone public: True"); }
   if (ns.corporation.getInvestmentOffer().round < 4 && !ns.corporation.getCorporation().public) { ns.print("Round " + ns.corporation.getInvestmentOffer().round + " Inv Offer: " + ns.formatNumber(ns.corporation.getInvestmentOffer().funds, 3)); }
   ns.print("Shares owned: " + ns.formatNumber(ns.corporation.getCorporation().numShares));
   if (ns.corporation.getCorporation().public) { ns.print("Dividends: " + ns.corporation.getCorporation().dividendEarnings); }
@@ -605,6 +628,7 @@ export async function main(ns) {
     humanResources(ns);
     marketPlace(ns);
     expansionPlan(ns);
+    warehouseSafety(ns);
     dumbSupply(ns);
     logPrint(ns);
   }
