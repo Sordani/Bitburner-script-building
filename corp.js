@@ -49,13 +49,13 @@ export class Business {
   }
   //function to replicate smart supply and save money earlygame 
   dumbSupply() {
-    if (ns.corporation.hasUnlock("Smart Supply")) { return; }
-    const divs = ns.corporation.getCorporation().divisions;
+    if (this.ns.corporation.hasUnlock("Smart Supply")) { return; }
+    const divs = this.ns.corporation.getCorporation().divisions;
     for (const divName of divs) {
-      const div = ns.corporation.getDivision(divName);
-      const industry = ns.corporation.getIndustryData(div.type);
+      const div = this.ns.corporation.getDivision(divName);
+      const industry = this.ns.corporation.getIndustryData(div.type);
       for (const city of div.cities) {
-        const office = ns.corporation.getOffice(divName, city);
+        const office = this.ns.corporation.getOffice(divName, city);
         const opProd = office.employeeProductionByJob.Operations || 0;
         const engrProd = office.employeeProductionByJob.Engineer || 0;
         const mgmtProd = office.employeeProductionByJob.Management || 0;
@@ -66,14 +66,14 @@ export class Business {
         const tProd =
           prod *
           div.productionMult *
-          (1 + ns.corporation.getUpgradeLevel("Smart Factories") * 3 / 100)
+          (1 + this.ns.corporation.getUpgradeLevel("Smart Factories") * 3 / 100)
           // * research multipliers, once I figure out how to access them.
           ;
         const required = industry.requiredMaterials;
         for (const [mat, amount] of Object.entries(required)) {
-          const stored = ns.corporation.getMaterial(divName, city, mat).stored / 10;
+          const stored = this.ns.corporation.getMaterial(divName, city, mat).stored / 10;
           const needed = Math.max(amount * tProd - stored, 0);
-          ns.corporation.buyMaterial(divName, city, mat, needed);
+          this.ns.corporation.buyMaterial(divName, city, mat, needed);
         }
       }
     }
