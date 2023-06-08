@@ -1,10 +1,10 @@
 export class Business {
   /**@type {NS} */
   ns
+  c
   corpName
-  agriName
-  tobaccoName
-  waterName
+  divNames
+  divTypes
   investNum
   jobs
   boostStock
@@ -16,15 +16,28 @@ export class Business {
   constructor(ns) {
     /**@type {NS} */
     this.ns = ns;
+    this.c = ns.corporation;
     this.corpName = "TerraCorp";
-    this.agriName = "AgriCorp";
-    this.tobaccoName = "CamelCorp";
-    this.waterName = "AquaCorp";
-    this.investNum = 1;
+    this.divNames = {
+      agriName: "AgriCorp",
+      tobaccoName: "CamelCorp",
+      waterName: "AquaCorp",
+      chemName: "ChemCorp",
+      restName: "DelTacoCorp",
+    }
+    this.divTypes = {
+      agriType: "Agriculture",
+      tobaccoType: "Tobacco",
+      waterType: "Spring Water",
+      chemType: "Chemical",
+      restType: "Restaurant"
+    }
+    this.investNum = 0;
 
     this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
     this.boostStock = ["Hardware", "Robots", "AI Cores", "Real Estate"];
-    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight"];
+    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
+    this.unlocks = ["Smart Supply", "Exports"];
     this.cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
     this.mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
 
@@ -128,15 +141,17 @@ export class Business {
         this.employeeSatisfactionCheck(); //stage 1
         break;
       case 2:
-        if (this.stage[1] == 0) this.ns.print("Buying first production multiplier material batch");
-        this.purchaseMaterials(0); //stage 2
+        // if (this.stage[1] == 0) this.ns.print("Buying first production multiplier material batch");
+        // this.purchaseMaterials(0); //not doing agristart anymore for now
+        this.ns.print("Imbezzlement initiating");
+        this.restaurantFraud(); //stage 2
         break;
       case 3:
-        if (this.stage[1] == 0) this.ns.print("Accepting the first investor offer");
-        this.invest(this.investNum); //stage 3 //1st investor offer is around 310 billion
+        if (this.stage[1] == 0) this.ns.print("Accepting the first investor offer.");
+        this.invest(); //stage 3 //1st investor offer is around 15 trillion
         break;
       case 4:
-        this.ns.print("Further upgrades");
+        this.ns.print("Further upgrades"); //we stopped around here. start messing with more stuff.
         this.upgradeStuff(1); //stage 4
         break;
       case 5:
@@ -153,7 +168,7 @@ export class Business {
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.invest(this.investNum); //stage 8
+        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 8
         break;
       case 9:
         this.ns.print("Last Agriculture upgrades");
@@ -178,36 +193,33 @@ export class Business {
   //Corp initialization. Creating the corp, expanding to agriculture and its' cities,
   //hiring and assigning in thosecities and buying some upgrades
   startstuff() {
-    if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName, false); } catch { this.ns.print("not in bitnode 3, attempting to self-fund"); } }
-    if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName); } catch { this.ns.print("self funding failed, requires 150 billion in cash available."); this.ns.exit(); } }
-    this.stage[1] = 1;
-    if (!this.ns.corporation.getCorporation().divisions.includes(this.agriName)) { this.ns.corporation.expandIndustry("Agriculture", this.agriName); }
-    this.stage[1] = 2;
-    //** testing dumb supply function to replace smart supply and save 25 billion ** 
-    //if (!this.ns.corporation.hasUnlock("Smart Supply")) { this.ns.corporation.purchaseUnlock("Smart Supply"); }
-    this.stage[1] = 3;
-    for (let city of this.cities) {
-      if (!this.ns.corporation.getDivision(this.agriName).cities.includes(city)) { this.ns.corporation.expandCity(this.agriName, city); }
-      if (!this.ns.corporation.hasWarehouse(this.agriName, city)) { this.ns.corporation.purchaseWarehouse(this.agriName, city); }
-      //** testing dumb supply **
-      //this.ns.corporation.setSmartSupply(this.agriName, city, true);
-      while (this.ns.corporation.hireEmployee(this.agriName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 3);
-      this.ns.corporation.sellMaterial(this.agriName, city, "Plants", "MAX", "MP");
-      this.ns.corporation.sellMaterial(this.agriName, city, "Food", "MAX", "MP");
+    if (this.stage[1] == 0) {
+      if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName, false); } catch { this.ns.print("not in bitnode 3, attempting to self-fund"); } }
+      if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName); } catch { this.ns.print("self funding failed, requires 150 billion in cash available."); this.ns.exit(); } }
+      this.stage[1] = 1;
     }
-    for (let i = 0; i < 2; i++) {
-      this.ns.corporation.hireAdVert(this.agriName);
+    if (this.stage[1] == 1) {
+      if (!this.ns.corporation.getCorporation().divisions.includes(this.divNames.restName)) { this.ns.corporation.expandIndustry(this.divTypes.restType, this.divNames.restName); }
+      this.stage[1] = 2;
     }
-    /*const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5];
-    for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
-    */ //don't buy useless upgrades?
-    for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[1]); }
-    for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.agriName, city, 4); }
+    if (this.stage[1] == 2) {
+      for (let city of this.cities) {
+        if (!this.ns.corporation.getDivision(this.divNames.restName).cities.includes(city)) { this.ns.corporation.expandCity(this.divNames.restName, city); }
+        if (!this.ns.corporation.hasWarehouse(this.divNames.restName, city)) { this.ns.corporation.purchaseWarehouse(this.divNames.restName, city); }
+        this.ns.corporation.upgradeOfficeSize(this.divNames.restName, city, 3);
+        while (this.ns.corporation.hireEmployee(this.divNames.restName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
+        this.ns.corporation.setAutoJobAssignment(this.divNames.restName, city, this.jobs[2], 6);
+      }
+      for (let i = 0; i < 26; i++) {
+        this.ns.corporation.hireAdVert(this.divNames.restName);
+      }
 
-    this.stage[0] += 1;
-    this.stage[1] = 0;
+      for (let i = 0; i < 2; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
+      for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.divNames.restName, city, 2); }
 
+      this.stage[0] += 1;
+      this.stage[1] = 0;
+    }
   }
 
   //Purchase materials (or set purchase amounts to 0), the wanted amounts are saved in the materialPhases array
@@ -215,7 +227,7 @@ export class Business {
     if (this.stage[1] == 0) {
       for (let city of this.cities) {
         for (let i = 0; i < 4; i++) {
-          this.ns.corporation.buyMaterial(this.agriName, city, this.boostStock[i], this.boostPhases[phase][i] / 10);
+          this.ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[i], this.boostPhases[phase][i] / 10);
         }
       }
       this.stage[1] += 1;
@@ -247,20 +259,34 @@ export class Business {
       this.stage[1]++;
     }
     if (avgs[0] / 6 >= 95 && avgs[1] / 6 >= 95 && this.stage[1] > 0) {
-      if (this.stage[0] == 1) {
-        for (let city of this.cities) {
-          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
-          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 1);
-          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1);
-          this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1);
-        }
-      } /*else if (this.stage[0] == 5) {
-        const lvlOrder = [0, 2, 3, 4, 5, 0, 2, 3, 4, 5, 7]; //added 7 for wilson analytics
-        for (let i = 0; i < 10; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[lvlOrder[i]]); }
-        //moved this from startstuff here prior to 2nd investment
-      } */ //not enough money anywhere for these upgrades
       this.stage[0] += 1; this.stage[1] = 0;
     }
+  }
+
+  //Fill Warehouses with Real Estate to sell
+  restaurantFraud() {
+    if (this.stage[1] == 0) {
+      for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
+        const rlEstConst = ns.corporation.getMaterialData(this.boostStock[3]);
+        const warehouse = ns.corporation.getWarehouse(this.divNames.restName, city);
+        ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], (((warehouse.size - warehouse.sizeUsed) / rlEstConst.size) / 10));
+      }
+      this.stage[1] = 1;
+    } else if (this.stage[1] == 1) {
+      if (ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+        for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
+          ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], 0);
+        }
+        this.stage[1] = 2;
+      }
+    } else if (this.stage[1] == 2) {
+      for (const city of ns.corporation.getDivision("DelTacoCorp").cities) {
+        ns.corporation.sellMaterial("DelTacoCorp", city, "Real Estate", "MAX", "MP");
+      }
+      this.stage[0] += 1;
+      this.stage[1] = 0;
+    }
+
   }
 
   //Reassigning the employess so that nobody works in R&D
@@ -279,7 +305,7 @@ export class Business {
   }
 
   //Accept investor offers after 10 cycles
-  invest(i) {
+  invest() {
     if (this.stage[1] == 0) {
       this.ns.print("waiting for a bit, just in case the investors might give a bit more money");
     }
@@ -289,14 +315,15 @@ export class Business {
     if (this.stage[1] <= 15) {
       this.ns.print("waiting cycles: " + this.stage[1] + "/15. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.stage[1] += 1;
+      this.investNum = this.ns.corporation.getInvestmentOffer().funds;
+      // if (this.investNum > this.ns.corporation.getInvestmentOffer().funds) { this.ns.print("accepting offer before it downturns anymore"); this.ns.corporation.acceptInvestmentOffer(); }
     }
     else if (this.ns.corporation.getCorporation().state != "PURCHASE") { ns.sleep(0); }
     else {
-      this.ns.tprint("investment offer round " + i + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+      this.ns.tprint("investment offer round " + this.ns.corporation.getInvestmentOffer().round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
-      this.investNum++;
     }
   }
 
