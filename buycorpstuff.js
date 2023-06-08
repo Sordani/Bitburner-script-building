@@ -199,19 +199,20 @@ export function humanResources(ns) {
         ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         if (ns.corporation.getOffice(division, city).numEmployees <= 3) { continue; }
         ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[4], Math.floor((ns.corporation.getOffice(division, city).numEmployees - (ns.corporation.getOffice(division, city).numEmployees / 5))));
+        let rdNum = 0;
+        try { while (ns.corporation.setAutoJobAssignment(division, city, jobs[4], rdNum++)) { } } catch { };
       }
     }
     else {
       for (const city of cities) {
         if (ns.corporation.getOffice(division, city).size > ns.corporation.getOffice(division, city).numEmployees) { while (ns.corporation.hireEmployee(division, city)) { } }
         ns.corporation.setAutoJobAssignment(division, city, jobs[5], 0);
-        ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 10));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
-        ns.corporation.setAutoJobAssignment(division, city, jobs[4], Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5), 1));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.max(Math.floor(0.5 * ns.corporation.getOffice(division, city).numEmployees / 5), 1));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[3], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5), 1));
+        ns.corporation.setAutoJobAssignment(division, city, jobs[4], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5), 1));
         let engNum = 0;
-        try { while (ns.corporation.setAutoJobAssignment(division, city, jobs[1], engNum++)) { } } catch { }
+        try { while (ns.corporation.setAutoJobAssignment(division, city, jobs[1], engNum++)) { } } catch { };
       }
     }
   }
@@ -248,39 +249,45 @@ export function rAndD(ns) {
 export function setPrices(ns) {
   //need to include logic to sell required products if they get too high in the storage.
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
-  const mats = ["Water", "Food", "Plants", "Hardware", "Chemicals", "Drugs", "Ore", "Metal", "Hardware", "Robots", "AI Cores", "Real Estate"];
   for (const division of ns.corporation.getCorporation().divisions) {
+    const divType = ns.corporation.getDivision(division).type;
+    const divData = ns.corporation.getIndustryData(divType);
     for (const city of cities) {
       if (ns.corporation.getDivision(division).makesProducts) {
         const prods = ns.corporation.getDivision(division).products
         for (const prod of prods) {
-          let prodData = ns.corporation.getProduct(division, city, prod);
+          const prodData = ns.corporation.getProduct(division, city, prod);
           if (prodData.developmentProgress < 100 && !ns.corporation.hasResearched(division, "uPgrade: Dashboard")) { continue; }
           if (ns.corporation.hasResearched(division, "Market-TA.II")) {
             ns.corporation.sellProduct(division, city, prod, "MAX", "MP", true);
             ns.corporation.setProductMarketTA2(division, prod, true);
           } else {
             let x = 1;
-            if (!prodData.desiredSellPrice == 0 && (prodData.actualSellAmount < prodData.productionAmount || prodData.stored > 0)) { x = prodData.desiredSellPrice.at(-1) - 0.001 }
-            if (!prodData.desiredSellPrice == 0 && prodData.actualSellAmount >= prodData.productionAmount && prodData.stored == 0) { x = prodData.desiredSellPrice.at(-1) + 0.001 }
+            if (prodData.desiredSellPrice.at(-1) != null && prodData.desiredSellPrice.at(-1) > 0) {
+              x = prodData.desiredSellPrice.at(-1);
+              if (prodData.stored === 0) {
+                x *= 2;
+              } else {
+                const buffer = Math.max(prodData.productionAmount, 1) / 10;
+                const desired = prodData.stored - buffer == 0 ? prodData.stored - buffer : 1;
+                const xMult = Math.max(0.33, Math.sqrt(prodData.actualSellAmount / desired));
+                x *= xMult;
+              }
+            }
+            if (!x > 0) { ns.tprint("x tried to be " + x + " for " + prod + " in " + division + ", " + city + ". correcting to 1"); x = 1; }
+            ns.print("setting price for " + division + ", " + city + ", " + prod + ", for MAX and MP*" + x);
             ns.corporation.sellProduct(division, city, prod, "MAX", "MP*" + x, true);
           }
         }
       }
-      for (const mat of mats) {
-        const matData = ns.corporation.getMaterial(division, city, mat)
-        if (matData.productionAmount <= 0) {
-          ns.corporation.sellMaterial(division, city, mat, 0, 0);
-          continue;
-        }
-        if (ns.corporation.hasResearched(division, "Market-TA.II")) {
-          ns.corporation.sellMaterial(division, city, mat, "MAX", "MP");
-          ns.corporation.setMaterialMarketTA2(division, city, mat, true);
-        } else {
-          let x = 1;
-          if (!matData.desiredSellPrice == 0 && (matData.actualSellAmount < matData.productionAmount || matData.stored > 0)) { x = matData.desiredSellPrice.at(-1) - 0.001 }
-          if (!matData.desiredSellPrice == 0 && matData.actualSellAmount >= matData.productionAmount && matData.stored == 0) { x = matData.desiredSellPrice.at(-1) + 0.001 }
-          ns.corporation.sellMaterial(division, city, mat, "MAX", "MP*" + x);
+      if (divData.producedMaterials) {
+        for (const mat of divData.producedMaterials) {
+          const matData = ns.corporation.getMaterial(division, city, mat);
+          const matConst = ns.corporation.getMaterialData(mat);
+          if (ns.corporation.hasResearched(division, "Market-TA.II")) {
+            ns.corporation.sellMaterial(division, city, mat, "MAX", "MP");
+            ns.corporation.setMaterialMarketTA2(division, city, mat, true);
+          } else { ns.corporation.sellMaterial(division, city, mat, "MAX", matData.marketPrice + (matData.quality / matConst.baseMarkup)); }
         }
       }
     }
@@ -427,6 +434,7 @@ export function makeProd(ns) {
 /** @param {NS} ns */
 export async function corpPurchases(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds;
+  if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
   const lvlUps = [
     "Smart Factories",
     "Smart Storage",
@@ -483,7 +491,6 @@ export async function corpPurchases(ns) {
     await ns.sleep(0);
   }
   const employeeUpCost = ns.corporation.getUpgradeLevelCost(lvlUps[4]) + ns.corporation.getUpgradeLevelCost(lvlUps[5]) + ns.corporation.getUpgradeLevelCost(lvlUps[6]) + ns.corporation.getUpgradeLevelCost(lvlUps[7]);
-  ns.print("employeeUpCost: " + ns.formatNumber(employeeUpCost, 3) + " // funds allowed: " + ns.formatNumber(upgradeFunds, 3));
   if (upgradeFunds > wilsonCost) { ns.print("buying " + lvlUps[3] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[3]); return; }
   if (upgradeFunds < employeeUpCost) { return; }
   if (employeeUpCost / 2 > labCost) { ns.print("buying " + lvlUps[9] + " upgrade"); ns.corporation.levelUpgrade(lvlUps[9]); return; }
@@ -503,7 +510,7 @@ export function expansionPlan(ns) {
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
   const divisionNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp", "JeffGoldblumCorp"];
   const divisionTypes = ["Agriculture", "Tobacco", "Spring Water", "Chemical", "Mining", "Refinery", "Computer Hardware", "Software", "Robotics", "Water Utilities", "Pharmaceutical", "Healthcare", "Fishing", "Restaurant", "Real Estate"];
-  const divisionFundsReq = [1e10, 7e10, 6e13, 7.5e11, 1e14, 1.5e14, 5e14, 7.5e14, 5e15, 2e16, 5e16, 7.5e16, 1e17, 2e17, 1e18];
+  const divisionFundsReq = [6e10, 7e10, 6e13, 7.5e11, 1e14, 1.5e14, 5e14, 7.5e14, 5e15, 2e16, 5e16, 7.5e16, 1e17, 1e12, 1e18];
   const divisions = ns.corporation.getCorporation().divisions;
   for (let i = 0; i < divisionNames.length; i++) {
     if (funds >= divisionFundsReq[i] && !divisions.includes(divisionNames[i])) {
@@ -514,9 +521,16 @@ export function expansionPlan(ns) {
       }
     }
   }
+  if (funds > 1e40 && !ns.corporation.getCorporation().public) { 
+    if (!ns.corporation.hasUnlock("Government Partnership")) { ns.corporation.purchaseUnlock("Government Partnership"); }
+    if (!ns.corporation.hasUnlock("Shady Accounting")) { ns.corporation.purchaseUnlock("Shady Accounting"); }
+    ns.corporation.goPublic(0); 
+    ns.corporation.issueDividends(0.001); 
+    }
 }
 
 //function to replicate smart supply and save money earlygame 
+/** @param {NS} ns */
 export function dumbSupply(ns) {
   if (ns.corporation.hasUnlock("Smart Supply")) { return; }
   const mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
@@ -549,6 +563,22 @@ export function dumbSupply(ns) {
   }
 }
 
+//function to make the log pretty
+/** @param {NS} ns */
+export function logPrint(ns) {
+  ns.clearLog();
+  ns.print("Corporation: " + ns.corporation.getCorporation().name);
+  ns.print("Divisions: " + ns.corporation.getCorporation().divisions.length);
+  ns.print("Earnings: " + ns.formatNumber(ns.corporation.getCorporation().revenue));
+  ns.print("Expenses: " + ns.formatNumber(ns.corporation.getCorporation().expenses));
+  ns.print("Profit: " + ns.formatNumber(ns.corporation.getCorporation().revenue - ns.corporation.getCorporation().expenses));
+  ns.print("Funds: " + ns.formatNumber(ns.corporation.getCorporation().funds, 3));
+  if (ns.corporation.getInvestmentOffer().round < 4 && !ns.corporation.getCorporation().public) { ns.print("investment offers accepted: " + (ns.corporation.getInvestmentOffer().round - 1)); } else if (!ns.corporation.getCorporation().public) { ns.print("All investment offers possible accepted."); } else { ns.print("Gone public: True"); }
+  if (ns.corporation.getInvestmentOffer().round < 4 && !ns.corporation.getCorporation().public) { ns.print("Round " + ns.corporation.getInvestmentOffer().round + " Inv Offer: " + ns.formatNumber(ns.corporation.getInvestmentOffer().funds, 3)); }
+  ns.print("Shares owned: " + ns.formatNumber(ns.corporation.getCorporation().numShares));
+  if (ns.corporation.getCorporation().public) { ns.print("Dividends: " + ns.corporation.getCorporation().dividendEarnings); }
+}
+
 /** @param {NS} ns */
 export async function main(ns) {
   ns.disableLog("ALL");
@@ -575,6 +605,7 @@ export async function main(ns) {
     marketPlace(ns);
     expansionPlan(ns);
     dumbSupply(ns);
+    logPrint(ns);
   }
 
 
