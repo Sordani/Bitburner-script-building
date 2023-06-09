@@ -438,17 +438,17 @@ export async function corpPurchases(ns) {
   if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
   if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply) * 10) { ns.corporation.purchaseUnlock("Smart Supply") }
   const lvlUps = [
-    "Smart Factories",
-    "Smart Storage",
-    "DreamSense",
-    "Wilson Analytics",
-    "Nuoptimal Nootropic Injector Implants",
-    "Speech Processor Implants",
-    "Neural Accelerators",
-    "FocusWires",
-    "ABC SalesBots",
-    "Project Insight"
-  ];
+      "Smart Factories",
+      "Smart Storage",
+      "DreamSense",
+      "Wilson Analytics",
+      "Nuoptimal Nootropic Injector Implants",
+      "Speech Processor Implants",
+      "Neural Accelerators",
+      "FocusWires",
+      "ABC SalesBots",
+      "Project Insight"
+    ];
   const wilsonCost = ns.corporation.getUpgradeLevelCost(lvlUps[3]);
   const labCost = ns.corporation.getUpgradeLevelCost(lvlUps[9]);
   const abcCost = ns.corporation.getUpgradeLevelCost(lvlUps[8]);
@@ -606,10 +606,14 @@ export function logPrint(ns) {
 
 /** @param {NS} ns */
 export function teaParty(ns) {
-  for (const city of ns.corporation.getDivision("DelTacoCorp").cities) {
-    const office = ns.corporation.getOffice("DelTacoCorp", city);
-    if (office.avgEnergy < 98) { ns.corporation.buyTea("DelTacoCorp", city); }
-    if (office.avgMorale < 98) { ns.corporation.throwParty("DelTacoCorp", city, 500_000); }
+  for (const div of ns.corporation.getCorporation().divisions) {
+    if (ns.corporation.hasResearched(div, "AutoBrew") && ns.corporation.hasResearched(div, "AutoPartyManager")) { continue; }
+    for (const city of ns.corporation.getDivision(div).cities) {
+      if (ns.corporation.hasResearched(division,))
+        const office = ns.corporation.getOffice("DelTacoCorp", city);
+      if (office.avgEnergy < 98) { ns.corporation.buyTea("DelTacoCorp", city); }
+      if (office.avgMorale < 98) { ns.corporation.throwParty("DelTacoCorp", city, 500_000); }
+    }
   }
 }
 
@@ -632,12 +636,12 @@ export async function main(ns) {
       await ns.sleep(0);
     }
     //and to this part put things you want done exactly once per cycle
+    expansionPlan(ns);
     setPrices(ns);
     makeProd(ns);
     rAndD(ns);
     humanResources(ns);
     marketPlace(ns);
-    expansionPlan(ns);
     warehouseSafety(ns);
     dumbSupply(ns);
     teaParty(ns);
