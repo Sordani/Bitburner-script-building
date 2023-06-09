@@ -438,8 +438,8 @@ export async function corpPurchases(ns) {
   if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
   if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply") * 10) { 
     ns.corporation.purchaseUnlock("Smart Supply"); 
-    for (division of ns.corporation.getCorporation().divisions) {
-      for (city of ns.corporation.getDivision(division).cities) {
+    for (const division of ns.corporation.getCorporation().divisions) {
+      for (const city of ns.corporation.getDivision(division).cities) {
         ns.corporation.setSmartSupply(division, city, true);
       }
     }
