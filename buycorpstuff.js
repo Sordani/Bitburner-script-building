@@ -605,6 +605,15 @@ export function logPrint(ns) {
 }
 
 /** @param {NS} ns */
+export function teaParty(ns) {
+  for (const city of ns.corporation.getDivision("DelTacoCorp").cities) {
+    const office = ns.corporation.getOffice("DelTacoCorp", city);
+    if (office.avgEnergy < 98) { ns.corporation.buyTea("DelTacoCorp", city); }
+    if (office.avgMorale < 98) { ns.corporation.throwParty("DelTacoCorp", city, 500_000); }
+  }
+}
+
+/** @param {NS} ns */
 export async function main(ns) {
   ns.disableLog("ALL");
   ns.tail();
@@ -631,6 +640,7 @@ export async function main(ns) {
     expansionPlan(ns);
     warehouseSafety(ns);
     dumbSupply(ns);
+    teaParty(ns);
     logPrint(ns);
   }
 
