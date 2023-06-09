@@ -436,6 +436,7 @@ export function makeProd(ns) {
 export async function corpPurchases(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds;
   if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
+  if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply) * 10) { ns.corporation.purchaseUnlock("Smart Supply") }
   const lvlUps = [
     "Smart Factories",
     "Smart Storage",
