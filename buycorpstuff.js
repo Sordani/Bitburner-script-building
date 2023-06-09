@@ -185,6 +185,9 @@ export function humanResources(ns) {
   for (const division of ns.corporation.getCorporation().divisions) {
     if (ns.corporation.getDivision(division).makesProducts) {
       if (ns.corporation.getOffice(division, prodCity).size > ns.corporation.getOffice(division, prodCity).numEmployees) { while (ns.corporation.hireEmployee(division, prodCity)) { } }
+      for (const job of jobs) {
+        ns.corporation.setAutoJobAssignment(division, prodCity, job, 0);
+      }
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[4], 0);
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[5], 0);
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[0], Math.floor(ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
@@ -193,6 +196,9 @@ export function humanResources(ns) {
       ns.corporation.setAutoJobAssignment(division, prodCity, jobs[3], Math.ceil(ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
       for (const city of supportCities) {
         if (ns.corporation.getOffice(division, city).size > ns.corporation.getOffice(division, city).numEmployees) { while (ns.corporation.hireEmployee(division, city)) { } }
+        for (const job of jobs) {
+          ns.corporation.setAutoJobAssignment(division, city, job, 0);
+        }
         ns.corporation.setAutoJobAssignment(division, city, jobs[5], 0);
         ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[1], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 20), 1));
@@ -206,6 +212,9 @@ export function humanResources(ns) {
     else {
       for (const city of cities) {
         if (ns.corporation.getOffice(division, city).size > ns.corporation.getOffice(division, city).numEmployees) { while (ns.corporation.hireEmployee(division, city)) { } }
+        for (const job of jobs) {
+          ns.corporation.setAutoJobAssignment(division, city, job, 0);
+        }
         ns.corporation.setAutoJobAssignment(division, city, jobs[5], 0);
         ns.corporation.setAutoJobAssignment(division, city, jobs[0], Math.max(Math.floor(ns.corporation.getOffice(division, city).numEmployees / 5), 1));
         ns.corporation.setAutoJobAssignment(division, city, jobs[2], Math.max(Math.floor(0.5 * ns.corporation.getOffice(division, city).numEmployees / 5), 1));
@@ -436,26 +445,26 @@ export function makeProd(ns) {
 export async function corpPurchases(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds;
   if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
-  if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply") * 10) { 
-    ns.corporation.purchaseUnlock("Smart Supply"); 
+  if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply") * 10) {
+    ns.corporation.purchaseUnlock("Smart Supply");
     for (const division of ns.corporation.getCorporation().divisions) {
       for (const city of ns.corporation.getDivision(division).cities) {
         ns.corporation.setSmartSupply(division, city, true);
       }
     }
-    }
+  }
   const lvlUps = [
-      "Smart Factories",
-      "Smart Storage",
-      "DreamSense",
-      "Wilson Analytics",
-      "Nuoptimal Nootropic Injector Implants",
-      "Speech Processor Implants",
-      "Neural Accelerators",
-      "FocusWires",
-      "ABC SalesBots",
-      "Project Insight"
-    ];
+    "Smart Factories",
+    "Smart Storage",
+    "DreamSense",
+    "Wilson Analytics",
+    "Nuoptimal Nootropic Injector Implants",
+    "Speech Processor Implants",
+    "Neural Accelerators",
+    "FocusWires",
+    "ABC SalesBots",
+    "Project Insight"
+  ];
   const wilsonCost = ns.corporation.getUpgradeLevelCost(lvlUps[3]);
   const labCost = ns.corporation.getUpgradeLevelCost(lvlUps[9]);
   const abcCost = ns.corporation.getUpgradeLevelCost(lvlUps[8]);
