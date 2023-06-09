@@ -210,11 +210,11 @@ export class Business {
         while (this.ns.corporation.hireEmployee(this.divNames.restName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
         this.ns.corporation.setAutoJobAssignment(this.divNames.restName, city, this.jobs[2], 6);
       }
-      for (let i = 0; i < 26; i++) {
+      for (let i = 0; i < 27; i++) {
         this.ns.corporation.hireAdVert(this.divNames.restName);
       }
 
-      for (let i = 0; i < 2; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
+      for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
       for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.divNames.restName, city, 2); }
 
       this.stage[0] += 1;
