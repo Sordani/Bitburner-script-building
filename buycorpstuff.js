@@ -321,15 +321,17 @@ export function marketPlace(ns) {
       }
     }
     if (divisions.includes(divNames[1])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[1], city, "Plants", "(IINV+IPROD)*(-1)"); //"(IINV+IPROD)*(-1)" 
+      if (divisions.includes(divNames[1])) { ns.corporation.exportMaterial(divNames[0], city, divNames[1], city, "Plants", "(IINV+IPROD)*(-1)"); } //"(IINV+IPROD)*(-1)" 
     }
     if (divisions.includes(divNames[2])) {
-      ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "(IINV+IPROD)*(-1)");
+      if (divisions.includes(divNames[0])) { ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "(IINV+IPROD)*(-1)"); }
     }
     if (divisions.includes(divNames[3])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "(IINV+IPROD)*(-1)");
-      ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "(IINV+IPROD)*(-1)");
-      ns.corporation.exportMaterial(divNames[2], city, divNames[3], city, "Water", "(IINV+IPROD)*(-1)");
+      if (divisions.includes(divNames[0])) { 
+        ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "(IINV+IPROD)*(-1)");
+        ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "(IINV+IPROD)*(-1)");
+      }
+      if (divisions.includes(divNames[2])) { ns.corporation.exportMaterial(divNames[2], city, divNames[3], city, "Water", "(IINV+IPROD)*(-1)"); }
     }
     if (divisions.includes(divNames[5])) {
       ns.corporation.exportMaterial(divNames[4], city, divNames[5], city, "Ore", "(IINV+IPROD)*(-1)");
