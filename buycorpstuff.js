@@ -30,6 +30,7 @@ export async function divisPurchases(ns) {
             while (ns.corporation.getOffice(division, city).numEmployees < y) {
               ns.corporation.upgradeOfficeSize(division, city, 3);
               while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
+              funds = ns.corporation.getCorporation().funds * 0.5;
               await ns.sleep(0);
             }
           }
@@ -41,6 +42,7 @@ export async function divisPurchases(ns) {
         ns.print(prodCity + " is not 30 employees ahead of the other cities. correcting. goal is " + (ns.corporation.getOffice(division, supportCities[0]) + 30));
         ns.corporation.upgradeOfficeSize(division, prodCity, 3);
         while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
+        funds = ns.corporation.getCorporation().funds * 0.5;
         await ns.sleep(0);
       }
       let z = Math.max(ns.corporation.getWarehouse(division, prodCity).level, ns.corporation.getWarehouse(division, supportCities[0]).level, ns.corporation.getWarehouse(division, supportCities[1]).level, ns.corporation.getWarehouse(division, supportCities[2]).level, ns.corporation.getWarehouse(division, supportCities[3]).level, ns.corporation.getWarehouse(division, supportCities[4]).level);
@@ -52,6 +54,7 @@ export async function divisPurchases(ns) {
           while (ns.corporation.getWarehouse(division, city).level < z) {
             ns.corporation.upgradeWarehouse(division, city);
             ns.print("upgrading " + city + " warehouse in " + division);
+            funds = ns.corporation.getCorporation().funds * 0.5;
             await ns.sleep(0);
           }
         }
@@ -67,19 +70,21 @@ export async function divisPurchases(ns) {
         }
         await ns.sleep(0);
       }
-      if ((funds * 0.8) / divisions.length >= advertCost || (funds * 0.8) / divisions.length >= officeExpCost) {
+      if ((funds * 0.3) / divisions.length >= advertCost || (funds * 0.3) / divisions.length >= officeExpCost) {
         if (officeExpCost > advertCost) { ns.corporation.hireAdVert(division); ns.print("AdVert bought in " + division); }
         if (officeExpCost < advertCost) {
           if (officeExpCost < supportExpCost) {
             ns.corporation.upgradeOfficeSize(division, prodCity, 15);
             while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
             ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
+            funds = ns.corporation.getCorporation().funds * 0.5;
           }
           else {
             for (const city of supportCities) {
               ns.corporation.upgradeOfficeSize(division, city, 15);
               while (ns.corporation.hireEmployee(division, city)) { }
               ns.print("upgraded " + city + " office capacity in " + division);
+              funds = ns.corporation.getCorporation().funds * 0.5;
             }
           }
         }
@@ -117,6 +122,7 @@ export async function divisPurchases(ns) {
           while (ns.corporation.getOffice(division, city).numEmployees < y) {
             ns.corporation.upgradeOfficeSize(division, city, 3);
             while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
+            funds = ns.corporation.getCorporation().funds * 0.5;
             await ns.sleep(0);
           }
         }
@@ -163,7 +169,7 @@ export async function divisPurchases(ns) {
         funds = ns.corporation.getCorporation().funds * 0.75;
         await ns.sleep(0);
       }
-      if ((funds * 0.01) / (divisions.length) >= warehouseCost) {
+      if ((funds * 0.2) / (divisions.length) >= warehouseCost) {
         ns.print("upgrading warehouses for all cities in " + division);
         for (const city of cities) {
           ns.corporation.upgradeWarehouse(division, city);
@@ -327,7 +333,7 @@ export function marketPlace(ns) {
       if (divisions.includes(divNames[0])) { ns.corporation.exportMaterial(divNames[2], city, divNames[0], city, "Water", "(IINV+IPROD)*(-1)"); }
     }
     if (divisions.includes(divNames[3])) {
-      if (divisions.includes(divNames[0])) { 
+      if (divisions.includes(divNames[0])) {
         ns.corporation.exportMaterial(divNames[0], city, divNames[3], city, "Plants", "(IINV+IPROD)*(-1)");
         ns.corporation.exportMaterial(divNames[3], city, divNames[0], city, "Chemicals", "(IINV+IPROD)*(-1)");
       }
@@ -435,7 +441,8 @@ export function makeProd(ns) {
     const prodMax = ns.corporation.hasResearched(divNames[i], "uPgrade: Capacity.I") ? 4 : 3;
     let products = ns.corporation.getDivision(divNames[i]).products;
     let version = (ns.corporation.getDivision(divNames[i]).products.length > 0) ? parseInt(products.at(-1).at(-1)) + 1 : 1;
-    if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress < 100) { return; }
+    if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress < 100) { continue; }
+    if (products[0].developmentProgress < 100 || products[1].developmentProgress < 100 || products[2].developmentProgress < 100) { continue; }
     if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress >= 100) { ns.corporation.discontinueProduct(divNames[i], products[0]); }
     ns.corporation.makeProduct(divNames[i], "Aevum", (prodNames[i] + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
     ns.print("started new product in " + divNames[i] + ", product: " + (prodNames[i] + version) + " - funding: " + ns.formatNumber((Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2), 3));
@@ -600,6 +607,64 @@ export function warehouseSafety(ns) {
           if (spaceTaken >= x * 0.1) {
             ns.corporation.sellMaterial(division, city, mat, "MAX*0.5", "MP*0.1");
           }
+        }
+      }
+    }
+  }
+}
+
+//function to buy boost materials for divisions that benefit from them, specifically agriculture
+/** @param {NS} ns */
+export function boostPurchase(ns) {
+  //we want graduating amounts. first some right off the bat values
+  //then medium amounts, usually including warehouse purchases up to a limit
+  //until the divisions that produce higher quality boost materials get pumping.
+  // //bail early for when we've started divisions that produce boost materials. 7 = hardware
+  if (ns.corporation.getCorporation().divisions.length > 7) { return; } 
+  const boostOrder = ["AI Cores", "Hardware", "Real Estate", "Robots"];
+  const divBoost = { //data map that will organize purchase orders.
+    agri = { //based entirely off Jeeks. I owe him and jakob entirely too much.
+      name: "AgriCorp",
+      first: [952, 1059, 68252, 0],
+      second: [6106, 6785, 317160, 793]
+    },
+    rest = {
+      name: "DelTacoCorp",
+      first: [2195, 2434, 10792, 161],
+      second: [10216, 11346, 51928, 2076]
+    },
+    chem = {
+      name: "ChemCorp",
+      first: [1394, 2324, 44232, 0],
+      second: [7032, 11727, 191236, 1274]
+    },
+    tob = {
+      name: "CamelCorp",
+      first: [1543, 2573, 38264, 0],
+      second: [7293, 12159, 154132, 1541]
+    }
+  };
+  for (const division of ns.corporation.getCorporation().divisions) {
+    //first, bail early
+    if (ns.corporation.getCorporation().funds < ns.corporation.getUpgradeWarehouseCost(division, "Sector-12", 6) * 6) { continue; }
+    for (const city of cities) {
+      for (const div of divBoost) {
+        if (division != div.name) { continue; }
+        //first increase warehouse. buffer for production and required materials 
+        //should be 40% and boost space should be 60% roughly
+        if (ns.corporation.getWarehouse(division, city).size < 1000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1) && ns.corporation.getWarehouse(division, city).size < 1000) { ns.corporation.upgradeWarehouse(division, city); } }
+        if (ns.corporation.getWarehouse(division, city).size < 1000) { continue; }
+        for (let i = 0; i < 4; i++) {
+          if (ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i]) {
+            try { ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i]); } catch { }
+          }
+        }
+        if (ns.corporation.getWarehouse(division, city).size < 5000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1) && ns.corporation.getWarehouse(division, city).size < 5000) { ns.corporation.upgradeWarehouse(division, city); } }
+        if (ns.corporation.getWarehouse(division, city).size < 5000) { continue; }
+        for (let i = 0; i < 4; i++) {
+          if (ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i]) {
+          try { ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i]); } catch { }
+        }
         }
       }
     }
