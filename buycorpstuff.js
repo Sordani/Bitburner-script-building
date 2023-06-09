@@ -389,10 +389,10 @@ export function marketPlace(ns) {
       ns.corporation.exportMaterial(divNames[12], city, divNames[11], city, "Food", "(IINV+IPROD)*(-1)");
     }
     if (divisions.includes(divNames[13])) {
-      ns.corporation.exportMaterial(divNames[0], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)");
-      ns.corporation.exportMaterial(divNames[12], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)");
-      ns.corporation.exportMaterial(divNames[3], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)");
-      ns.corporation.exportMaterial(divNames[9], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)");
+      if (divisions.includes(divNames[0])) { ns.corporation.exportMaterial(divNames[0], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)"); }
+      if (divisions.includes(divNames[12])) { ns.corporation.exportMaterial(divNames[12], city, divNames[13], city, "Food", "(IINV+IPROD)*(-1)"); }
+      if (divisions.includes(divNames[3])) { ns.corporation.exportMaterial(divNames[3], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)"); }
+      if (divisions.includes(divNames[9])) { ns.corporation.exportMaterial(divNames[9], city, divNames[13], city, "Water", "(IINV+IPROD)*(-1)"); }
     }
     if (divisions.includes(divNames[14])) {
       ns.corporation.exportMaterial(divNames[0], city, divNames[14], city, "Plants", "(IINV+IPROD)*(-1)");
@@ -436,7 +436,14 @@ export function makeProd(ns) {
 export async function corpPurchases(ns) {
   const upgradeFunds = ns.corporation.getCorporation().funds;
   if (!ns.corporation.hasUnlock("Export") && upgradeFunds > ns.corporation.getUnlockCost("Export")) { ns.corporation.purchaseUnlock("Export"); }
-  if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply) * 10) { ns.corporation.purchaseUnlock("Smart Supply") }
+  if (!ns.corporation.hasUnlock("Smart Supply") && upgradeFunds > ns.corporation.getUnlockCost("Smart Supply") * 10) { 
+    ns.corporation.purchaseUnlock("Smart Supply"); 
+    for (division of ns.corporation.getCorporation().divisions) {
+      for (city of ns.corporation.getDivision(division).cities) {
+        ns.corporation.setSmartSupply(division, city, true);
+      }
+    }
+    }
   const lvlUps = [
       "Smart Factories",
       "Smart Storage",
@@ -508,7 +515,7 @@ export async function corpPurchases(ns) {
 //function to expand to other industries.
 /** @param {NS} ns */
 export function expansionPlan(ns) {
-  const funds = ns.corporation.getCorporation().funds;
+  let funds = ns.corporation.getCorporation().funds;
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
   const divisionNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp", "JeffGoldblumCorp"];
   const divisionTypes = ["Agriculture", "Tobacco", "Spring Water", "Chemical", "Mining", "Refinery", "Computer Hardware", "Software", "Robotics", "Water Utilities", "Pharmaceutical", "Healthcare", "Fishing", "Restaurant", "Real Estate"];
@@ -520,6 +527,7 @@ export function expansionPlan(ns) {
       for (const city of cities) {
         if (!ns.corporation.getDivision(divisionNames[i]).cities.includes(city)) { ns.corporation.expandCity(divisionNames[i], city); }
         if (!ns.corporation.hasWarehouse(divisionNames[i], city)) { ns.corporation.purchaseWarehouse(divisionNames[i], city); }
+        funds = ns.corporation.getCorporation().funds;
       }
     }
   }
@@ -609,10 +617,9 @@ export function teaParty(ns) {
   for (const div of ns.corporation.getCorporation().divisions) {
     if (ns.corporation.hasResearched(div, "AutoBrew") && ns.corporation.hasResearched(div, "AutoPartyManager")) { continue; }
     for (const city of ns.corporation.getDivision(div).cities) {
-      if (ns.corporation.hasResearched(division,))
-        const office = ns.corporation.getOffice("DelTacoCorp", city);
-      if (office.avgEnergy < 98) { ns.corporation.buyTea("DelTacoCorp", city); }
-      if (office.avgMorale < 98) { ns.corporation.throwParty("DelTacoCorp", city, 500_000); }
+      const office = ns.corporation.getOffice(div, city);
+      if (office.avgEnergy < 98) { ns.corporation.buyTea(div, city); }
+      if (office.avgMorale < 98) { ns.corporation.throwParty(div, city, 500_000); }
     }
   }
 }
@@ -621,6 +628,9 @@ export function teaParty(ns) {
 export async function main(ns) {
   ns.disableLog("ALL");
   ns.tail();
+
+  //check for expansionPlan first and foremost
+  expansionPlan(ns);
 
   while (true) {
     while (ns.corporation.getCorporation().state != "START") {
@@ -647,6 +657,5 @@ export async function main(ns) {
     teaParty(ns);
     logPrint(ns);
   }
-
 
 }
