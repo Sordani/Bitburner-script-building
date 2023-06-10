@@ -21,7 +21,7 @@ export async function divisPurchases(ns) {
         supportExpCost += supportExps[i];
         supportWHCost += supportWHs[i];
       }
-      let y = Math.max(ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[0], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[1], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[2], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[3], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[4], 15));
+      let y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOfficeSize(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
       if (!supportExps.every((number) => number === supportExps[0])) {
         ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
         while (!supportExps.every((number) => number === supportExps[0])) {
@@ -34,7 +34,11 @@ export async function divisPurchases(ns) {
               await ns.sleep(0);
             }
           }
-          y = Math.max(ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[0], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[1], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[2], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[3], 15), ns.corporation.getOfficeSizeUpgradeCost(division, supportCities[4], 15));
+          y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOfficeSize(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
+          supportExps = [];
+          for (const city of supportCities) {
+            supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+          }
           await ns.sleep(0);
         }
       }
@@ -442,7 +446,7 @@ export function makeProd(ns) {
     let products = ns.corporation.getDivision(divNames[i]).products;
     let version = (ns.corporation.getDivision(divNames[i]).products.length > 0) ? parseInt(products.at(-1).at(-1)) + 1 : 1;
     if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress < 100) { continue; }
-    if (products[0].developmentProgress < 100 || products[1].developmentProgress < 100 || products[2].developmentProgress < 100) { continue; }
+    if (products[0]?.developmentProgress < 100 || products[1]?.developmentProgress < 100 || products[2]?.developmentProgress < 100) { continue; }
     if (products.length >= prodMax && ns.corporation.getProduct(divNames[i], "Aevum", products[prodMax - 1]).developmentProgress >= 100) { ns.corporation.discontinueProduct(divNames[i], products[0]); }
     ns.corporation.makeProduct(divNames[i], "Aevum", (prodNames[i] + version), Math.abs(ns.corporation.getCorporation().funds * 0.01), Math.abs(ns.corporation.getCorporation().funds * 0.01));
     ns.print("started new product in " + divNames[i] + ", product: " + (prodNames[i] + version) + " - funding: " + ns.formatNumber((Math.abs(ns.corporation.getCorporation().funds * 0.01) * 2), 3));
@@ -620,51 +624,50 @@ export function boostPurchase(ns) {
   //then medium amounts, usually including warehouse purchases up to a limit
   //until the divisions that produce higher quality boost materials get pumping.
   // //bail early for when we've started divisions that produce boost materials. 7 = hardware
-  if (ns.corporation.getCorporation().divisions.length > 7) { return; } 
+  if (ns.corporation.getCorporation().divisions.length > 7) { return; }
   const boostOrder = ["AI Cores", "Hardware", "Real Estate", "Robots"];
   const divBoost = { //data map that will organize purchase orders.
-    agri = { //based entirely off Jeeks. I owe him and jakob entirely too much.
+    agri: { //based entirely off Jeeks. I owe him and jakob entirely too much.
       name: "AgriCorp",
       first: [952, 1059, 68252, 0],
       second: [6106, 6785, 317160, 793]
     },
-    rest = {
+    rest: {
       name: "DelTacoCorp",
       first: [2195, 2434, 10792, 161],
       second: [10216, 11346, 51928, 2076]
     },
-    chem = {
+    chem: {
       name: "ChemCorp",
       first: [1394, 2324, 44232, 0],
       second: [7032, 11727, 191236, 1274]
     },
-    tob = {
+    tob: {
       name: "CamelCorp",
       first: [1543, 2573, 38264, 0],
       second: [7293, 12159, 154132, 1541]
     }
   };
   for (const division of ns.corporation.getCorporation().divisions) {
-    //first, bail early
-    if (ns.corporation.getCorporation().funds < ns.corporation.getUpgradeWarehouseCost(division, "Sector-12", 6) * 6) { continue; }
-    for (const city of cities) {
-      for (const div of divBoost) {
+    if (ns.corporation.getCorporation().funds < ns.corporation.getUpgradeWarehouseCost(division, "Sector-12", 1) * 6) { continue; }
+    for (const city of ns.corporation.getDivision(division).cities) {
+      for (const div of Object.values(divBoost)) {
         if (division != div.name) { continue; }
         //first increase warehouse. buffer for production and required materials 
         //should be 40% and boost space should be 60% roughly
-        if (ns.corporation.getWarehouse(division, city).size < 1000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1) && ns.corporation.getWarehouse(division, city).size < 1000) { ns.corporation.upgradeWarehouse(division, city); } }
+        if (ns.corporation.getWarehouse(division, city).size < 1000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city) && ns.corporation.getWarehouse(division, city).size < 1000) { ns.corporation.upgradeWarehouse(division, city); } }
         if (ns.corporation.getWarehouse(division, city).size < 1000) { continue; }
         for (let i = 0; i < 4; i++) {
           if (ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i]) {
             try { ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i]); } catch { }
           }
         }
-        if (ns.corporation.getWarehouse(division, city).size < 5000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city, 1) && ns.corporation.getWarehouse(division, city).size < 5000) { ns.corporation.upgradeWarehouse(division, city); } }
+        if (ns.corporation.getWarehouse(division, city).size < 5000 && ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city)) { while (ns.corporation.getCorporation().funds > ns.corporation.getUpgradeWarehouseCost(division, city) && ns.corporation.getWarehouse(division, city).size < 5000) { ns.corporation.upgradeWarehouse(division, city); } }
         if (ns.corporation.getWarehouse(division, city).size < 5000) { continue; }
         for (let i = 0; i < 4; i++) {
           if (ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i]) {
-          try { ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i]); } catch { }
-        }
+            try { ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i]); } catch { }
+          }
         }
       }
     }
@@ -707,6 +710,8 @@ export async function main(ns) {
 
   //check for expansionPlan first and foremost
   expansionPlan(ns);
+  //then boostMaterials
+  boostPurchase(ns);
 
   while (true) {
     while (ns.corporation.getCorporation().state != "START") {
@@ -723,6 +728,7 @@ export async function main(ns) {
     }
     //and to this part put things you want done exactly once per cycle
     expansionPlan(ns);
+    boostPurchase(ns);
     setPrices(ns);
     makeProd(ns);
     rAndD(ns);
