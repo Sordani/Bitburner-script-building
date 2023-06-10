@@ -442,8 +442,7 @@ export class Business {
         if (!this.ns.corporation.getDivision(div).cities.includes(city)) {this.ns.corporation.expandCity(div, city); }
         if (!this.ns.corporation.hasWarehouse(div, city)) { this.ns.corporation.purchaseWarehouse(div, city) }
         this.ns.corporation.upgradeOfficeSize(div, city, 3);
-        while (this.ns.corporation.hireEmployee(div, city)) { }
-        this.ns.corporation.setAutoJobAssignment(div, city, this.jobs[2])
+        while (this.ns.corporation.hireEmployee(div, city, this.jobs[2])) { }
         this.ns.corporation.upgradeWarehouse(div, city, 2);
       }
       for (let i = 0; i < 24; i++) { this.ns.corporation.hireAdVert(div) }
