@@ -314,7 +314,7 @@ export class Business {
           this.stage[1] = 2;
         }
       } else if (this.stage[1] == 2) {
-        for (const city of ns.corporation.getDivision(this.divNames.restName).cities) {
+        for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
           this.ns.corporation.sellMaterial(this.divNames.restName, city, this.boostStock[3], "MAX", "MP");
         }
         this.stage[0] += 1;
@@ -336,7 +336,7 @@ export class Business {
         if (ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
           for (const division of this.ns.corporation.getCorporation().divisions) {
             for (const city of this.ns.corporation.getDivision(division).cities) {
-              ns.corporation.buyMaterial(division, city, this.boostStock[3], 0);
+              this.ns.corporation.buyMaterial(division, city, this.boostStock[3], 0);
             }
           }
           this.stage[1] = 2;
@@ -344,7 +344,7 @@ export class Business {
       } else if (this.stage[1] == 2) {
         for (const division of this.ns.corporation.getCorporation().divisions) {
           for (const city of this.ns.corporation.getDivision(division).cities) {
-            ns.corporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
+           this.nscorporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
           }
         }
         this.stage[0] += 1;
@@ -419,7 +419,7 @@ export class Business {
       this.investNum = this.ns.corporation.getInvestmentOffer().funds;
       // if (this.investNum > this.ns.corporation.getInvestmentOffer().funds) { this.ns.print("accepting offer before it downturns anymore"); this.ns.corporation.acceptInvestmentOffer(); }
     }
-    else if (this.ns.corporation.getCorporation().state != "PURCHASE") { ns.sleep(0); }
+    else if (this.ns.corporation.getCorporation().state != "PURCHASE") {this.nssleep(0); }
     else {
       this.ns.tprint("investment offer round " + round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
@@ -439,7 +439,7 @@ export class Business {
       if (div == this.divNames.restName) { continue; }
       this.ns.corporation.expandIndustry(this.divTypes.restType, div);
       for (let city of this.cities) {
-        if (!this.ns.corporation.getDivision(div).cities.includes(city)) { ns.corporation.expandCity(div, city); }
+        if (!this.ns.corporation.getDivision(div).cities.includes(city)) {this.nscorporation.expandCity(div, city); }
         if (!this.ns.corporation.hasWarehouse(div, city)) { this.ns.corporation.purchaseWarehouse(div, city) }
         this.ns.corporation.upgradeOfficeSize(div, city, 3);
         while (this.ns.corporation.hireEmployee(div, city)) { }
@@ -464,11 +464,11 @@ export class Business {
       this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
     }
     for (const division of this.ns.corporation.getCorporation().divisions) {
-      for (let i = 0; i < (54 - ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
+      for (let i = 0; i < (54 - this.nscorporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
       for (const city of this.cities) {
-        ns.corporation.upgradeOfficeSize(division, city, (30 - ns.corporation.getOffice(division, city).size));
+        this.ns.corporation.upgradeOfficeSize(division, city, (30 - this.ns.corporation.getOffice(division, city).size));
         while (ns.corporation.hireEmployee(division, city, "Business")) { }
-        ns.corporation.upgradeWarehouse(division, city, (10 - ns.corporation.getWarehouse(division, city).level));
+        this.ns.corporation.upgradeWarehouse(division, city, (10 - this.ns.corporation.getWarehouse(division, city).level));
       }
     }
 
@@ -488,7 +488,7 @@ export class Business {
 
   //Expand to tobacco division and its' cities, set employee positions, start the first product's development, and buy some more upgrades
   expandToTobacco() {
-    try { this.ns.corporation.expandIndustry("Tobacco", this.tobaccoName); } catch { this.ns.tprint("Couldn't expand.. no money"); ns.exit(); }
+    try { this.ns.corporation.expandIndustry("Tobacco", this.tobaccoName); } catch { this.ns.tprint("Couldn't expand.. no money"); this.ns.exit(); }
     this.ns.corporation.expandCity(this.tobaccoName, this.cities[0]);
     this.ns.corporation.purchaseWarehouse(this.tobaccoName, this.cities[0]);
     for (let i = 0; i < 9; i++) {
