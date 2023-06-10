@@ -307,7 +307,7 @@ export class Business {
         }
         this.stage[1] = 1;
       } else if (this.stage[1] == 1) {
-        if (this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+        if (this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
           for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
             this.ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], 0);
           }
@@ -360,13 +360,13 @@ export class Business {
     for (const division of this.ns.corporation.getCorporation().divisions) {
       for (const city of this.cities) {
         for (const job of this.jobs) { //set all jobs to none everywhere
-          ns.corporation.setAutoJobAssignment(division, prodCity, job, 0);
+          this.ns.corporation.setAutoJobAssignment(division, prodCity, job, 0);
         }
       }
     }
     for (const rest of rests) {
       for (const city of this.cities) { //set all these fools to research and development.
-        ns.corporation.setAutoJobAssignment(rest, city, job[4], this.ns.corporation.getOffice(division, city).numEmployees);
+        this.ns.corporation.setAutoJobAssignment(rest, city, job[4], this.ns.corporation.getOffice(division, city).numEmployees);
       } //we won't be restauranting for a bit.
     }
 
