@@ -432,7 +432,7 @@ export class Business {
   enronFraudPrep() {
     const fraudNames = [];
     fraudNames.push(this.divNames.restName);
-    for (const name of this.divNames.fraudNames) {
+    for (const name of this.divNames.restFraudNames) {
       fraudNames.push(name);
     }
     for (const div of fraudNames) {
