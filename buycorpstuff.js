@@ -74,6 +74,11 @@ export async function divisPurchases(ns) {
         }
         await ns.sleep(0);
       }
+      if (ns.corporation.getOffice(division, supportCities[0]).size < 15) {
+        for (const city of supportCities) {
+          ns.corporation.upgradeOfficeSize(division, city, (15 - ns.corporation.getOffice(division, city).size));
+        }
+      }
       if ((funds * 0.3) / divisions.length >= advertCost || (funds * 0.3) / divisions.length >= officeExpCost) {
         if (officeExpCost > advertCost) { ns.corporation.hireAdVert(division); ns.print("AdVert bought in " + division); }
         if (officeExpCost < advertCost) {
