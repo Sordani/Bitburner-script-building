@@ -285,7 +285,7 @@ export class Business {
       overallAvgs.push(avgs);
       this.stage[1]++;
     }
-    for (i = 0; i < overallAvgs.length; i++) {
+    for (let i = 0; i < overallAvgs.length; i++) {
       finalMorAvg += overallAvgs[i][0];
       finalEneAvg += overallAvgs[i][1];
     }
