@@ -406,7 +406,7 @@ export class Business {
   }
 
   //Accept investor offers after 10 cycles
-  invest(round) {
+  invest() {
     if (this.stage[1] == 0) {
       this.ns.print("waiting for a bit, just in case the investors might give a bit more money");
     }
@@ -421,7 +421,7 @@ export class Business {
     }
     else if (this.ns.corporation.getCorporation().state != "PURCHASE") {this.nssleep(0); }
     else {
-      this.ns.tprint("investment offer round " + round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+      this.ns.tprint("investment offer round " + this.ns.corporation.getInvestmentOffer().round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
@@ -439,7 +439,7 @@ export class Business {
       if (div == this.divNames.restName) { continue; }
       this.ns.corporation.expandIndustry(this.divTypes.restType, div);
       for (let city of this.cities) {
-        if (!this.ns.corporation.getDivision(div).cities.includes(city)) {this.nscorporation.expandCity(div, city); }
+        if (!this.ns.corporation.getDivision(div).cities.includes(city)) {this.ns.corporation.expandCity(div, city); }
         if (!this.ns.corporation.hasWarehouse(div, city)) { this.ns.corporation.purchaseWarehouse(div, city) }
         this.ns.corporation.upgradeOfficeSize(div, city, 3);
         while (this.ns.corporation.hireEmployee(div, city)) { }
