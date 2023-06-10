@@ -151,7 +151,7 @@ export class Business {
         this.invest(); //stage 3 //1st investor offer is around 15 trillion
         break;
       case 4:
-        this.ns.print("Further upgrades"); //we stopped around here. start messing with more stuff.
+        this.ns.print("Now to do it again but times 6");
         this.upgradeStuff(1); //stage 4
         break;
       case 5:
@@ -312,8 +312,8 @@ export class Business {
     //investor evaluation takes into account 10 cycles
     //and we want them to take into account the current high earning cycles,
     //not the old low earning cycles, so we'll wait for a bit
-    if (this.stage[1] <= 15) {
-      this.ns.print("waiting cycles: " + this.stage[1] + "/15. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+    if (this.stage[1] <= 30 && this.investNum < this.ns.corporation.getInvestmentOffer().funds) {
+      this.ns.print("waiting cycles: " + this.stage[1] + "/30. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.stage[1] += 1;
       this.investNum = this.ns.corporation.getInvestmentOffer().funds;
       // if (this.investNum > this.ns.corporation.getInvestmentOffer().funds) { this.ns.print("accepting offer before it downturns anymore"); this.ns.corporation.acceptInvestmentOffer(); }
