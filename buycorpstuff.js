@@ -4,15 +4,17 @@ export async function divisPurchases(ns) {
   const prodCity = "Aevum";
   const supportCities = ["Sector-12", "Chongqing", "New Tokyo", "Ishima", "Volhaven"]
   const divisions = ns.corporation.getCorporation().divisions
-  let funds = ns.corporation.getCorporation().funds * 0.5;
+  let funds = ns.corporation.getCorporation().funds * 0.2;
+  //we want to concentrate on a single product producing division. Tobacco is the current winner.
+  let tobaccoFunds = ns.corporation.getCorporation().funds * 0.8;
   for (const division of divisions) {
     if (ns.corporation.getDivision(division).makesProducts) {
       let advertCost = ns.corporation.getHireAdVertCost(division);
-      let officeExpCost = ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 15);
+      let officeExpCost = ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 3);
       let supportExps = [];
       let supportWHs = [];
       for (const city of supportCities) {
-        supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+        supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 3));
         supportWHs.push(ns.corporation.getUpgradeWarehouseCost(division, city));
       }
       let supportExpCost = 0;
@@ -37,7 +39,7 @@ export async function divisPurchases(ns) {
           y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOffice(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
           supportExps = [];
           for (const city of supportCities) {
-            supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+            supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 3));
           }
           await ns.sleep(0);
         }
@@ -74,24 +76,46 @@ export async function divisPurchases(ns) {
         }
         await ns.sleep(0);
       }
-      if (ns.corporation.getOffice(division, supportCities[0]).size < 15) {
+      if (ns.corporation.getOffice(division, supportCities[0]).size < 30) {
         for (const city of supportCities) {
-          ns.corporation.upgradeOfficeSize(division, city, (15 - ns.corporation.getOffice(division, city).size));
+          ns.corporation.upgradeOfficeSize(division, city, (30 - ns.corporation.getOffice(division, city).size));
           while (ns.corporation.hireEmployee(division, city)) { }
         }
       }
-      if ((funds * 0.3) / divisions.length >= advertCost || (funds * 0.3) / divisions.length >= officeExpCost) {
+      if ((division == "CamelCorp")) {
+        if (tobaccoFunds >= advertCost || tobaccoFunds >= officeExpCost) {
         if (officeExpCost > advertCost) { ns.corporation.hireAdVert(division); ns.print("AdVert bought in " + division); }
         if (officeExpCost < advertCost) {
           if (officeExpCost < supportExpCost) {
-            ns.corporation.upgradeOfficeSize(division, prodCity, 15);
+            ns.corporation.upgradeOfficeSize(division, prodCity, 3);
             while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
             ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
             funds = ns.corporation.getCorporation().funds * 0.5;
           }
           else {
             for (const city of supportCities) {
-              ns.corporation.upgradeOfficeSize(division, city, 15);
+              ns.corporation.upgradeOfficeSize(division, city, 3);
+              while (ns.corporation.hireEmployee(division, city)) { }
+              ns.print("upgraded " + city + " office capacity in " + division);
+              funds = ns.corporation.getCorporation().funds * 0.5;
+            }
+          }
+        }
+        await ns.sleep(0);
+      }
+      }
+      if ((funds * 0.8) / divisions.length >= advertCost || (funds * 0.8) / divisions.length >= officeExpCost) {
+        if (officeExpCost > advertCost) { ns.corporation.hireAdVert(division); ns.print("AdVert bought in " + division); }
+        if (officeExpCost < advertCost) {
+          if (officeExpCost < supportExpCost) {
+            ns.corporation.upgradeOfficeSize(division, prodCity, 3);
+            while (ns.corporation.hireEmployee(division, prodCity)) { await ns.sleep(0); }
+            ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
+            funds = ns.corporation.getCorporation().funds * 0.5;
+          }
+          else {
+            for (const city of supportCities) {
+              ns.corporation.upgradeOfficeSize(division, city, 3);
               while (ns.corporation.hireEmployee(division, city)) { }
               ns.print("upgraded " + city + " office capacity in " + division);
               funds = ns.corporation.getCorporation().funds * 0.5;
@@ -114,7 +138,7 @@ export async function divisPurchases(ns) {
       let officeExps = [];
       let warehouseUps = [];
       for (const city of cities) {
-        officeExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+        officeExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 3));
         warehouseUps.push(ns.corporation.getUpgradeWarehouseCost(division, city));
       }
       let officeExpCost = 0;
@@ -138,7 +162,7 @@ export async function divisPurchases(ns) {
         }
         officeExps = [];
         for (const city of cities) {
-          officeExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
+          officeExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 3));
         }
         officeExpCost = 0;
         for (let i = 0; i < officeExps.length; i++) {
@@ -173,7 +197,7 @@ export async function divisPurchases(ns) {
       if ((funds * 0.8) / (divisions.length) >= officeExpCost) {
         ns.print("upgrading Office Sizes for all cities in " + division);
         for (const city of cities) {
-          ns.corporation.upgradeOfficeSize(division, city, 15);
+          ns.corporation.upgradeOfficeSize(division, city, 3);
           while (ns.corporation.hireEmployee(division, city)) { await ns.sleep(0); }
         }
         funds = ns.corporation.getCorporation().funds * 0.75;
@@ -361,7 +385,7 @@ export function marketPlace(ns) {
           case divNames[7]:
           case divNames[8]:
           case divNames[9]:
-            ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)");
+            if (divisions.includes(divNames[i])) { ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)"); }
             break;
           default:
             ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
@@ -375,7 +399,7 @@ export function marketPlace(ns) {
           case divNames[7]:
             break;
           case divNames[8]:
-            ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(IINV+IPROD)*(-1)");
+            if (divisions.includes(divNames[i])) { ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(IINV+IPROD)*(-1)"); }
             break;
           default:
             ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * cities.length) * 5));
@@ -542,12 +566,14 @@ export async function corpPurchases(ns) {
 
 //function to expand to other industries.
 /** @param {NS} ns */
-export function expansionPlan(ns) {
+export function expansionPlan(ns) { 
+  //agri, tob, chem first. spring water second. ore, refinery, hardware 3rd, software and robotics 4th, everything else after.
+  //currently expecting 1 of every division an eventuality, because exporting is fun.
   let funds = ns.corporation.getCorporation().funds;
   const cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
   const divisionNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp", "JeffGoldblumCorp"];
   const divisionTypes = ["Agriculture", "Tobacco", "Spring Water", "Chemical", "Mining", "Refinery", "Computer Hardware", "Software", "Robotics", "Water Utilities", "Pharmaceutical", "Healthcare", "Fishing", "Restaurant", "Real Estate"];
-  const divisionFundsReq = [6e10, 7e10, 6e13, 7.5e11, 1e14, 1.5e14, 5e14, 7.5e14, 5e15, 2e16, 5e16, 7.5e16, 1e17, 1e12, 1e18];
+  const divisionFundsReq = [6e10, 7e10, 1e15, 7.5e11, 1e18, 1e18, 1e18, 1e21, 1e21, 1e24, 1e24, 1e24, 1e24, 1e24, 1e24];
   const divisions = ns.corporation.getCorporation().divisions;
   for (let i = 0; i < divisionNames.length; i++) {
     if (funds >= divisionFundsReq[i] && !divisions.includes(divisionNames[i])) {
@@ -652,6 +678,11 @@ export function boostPurchase(ns) {
       name: "CamelCorp",
       first: [1543, 2573, 38264, 0],
       second: [7293, 12159, 154132, 1541]
+    },
+    sprng: {
+      name: "AquaCorp",
+      first: [1339, 0, 73220, 0],
+      second: [9680, 0, 406400, 0]
     }
   };
   for (const division of ns.corporation.getCorporation().divisions) {
