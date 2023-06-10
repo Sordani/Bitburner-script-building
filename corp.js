@@ -13,6 +13,7 @@ export class Business {
   boostPhases
   stage
   mats
+  divProd
   constructor(ns) {
     /**@type {NS} */
     this.ns = ns;
@@ -24,6 +25,7 @@ export class Business {
       waterName: "AquaCorp",
       chemName: "ChemCorp",
       restName: "DelTacoCorp",
+      restFraudNames: ["BurgerKingCorp", "SubWayCorp", "OliveGardenCorp", "JackInTheBoxCorp", "PopeyesCorp"]
     }
     this.divTypes = {
       agriType: "Agriculture",
@@ -32,11 +34,28 @@ export class Business {
       chemType: "Chemical",
       restType: "Restaurant"
     }
+    this.divProd = {
+      tob: "Tobacco v",
+      comp: "Asus v",
+      soft: "Jarvis v",
+      rob: "Chappy v",
+      phar: "CureAll v",
+      heal: "Kaiser #",
+      real: "Apartments #",
+      rest: {
+        del: "DelTaco #",
+        bk: "BurgerKing #",
+        sw: "SubWay #",
+        og: "OliveGarden #",
+        jb: "JackInTheBox #",
+        pe: "PopEyes #"
+      }
+    }
     this.investNum = 0;
 
     this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
     this.boostStock = ["Hardware", "Robots", "AI Cores", "Real Estate"];
-    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
+    this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots", "DreamSense"];
     this.unlocks = ["Smart Supply", "Exports"];
     this.cities = ["Aevum", "Chongqing", "New Tokyo", "Ishima", "Volhaven", "Sector-12"];
     this.mats = ["Water", "Food", "Plants", "Chemicals", "Drugs", "Ore", "Metal"];
@@ -60,7 +79,8 @@ export class Business {
       }
     }
   }
-  //function to replicate smart supply and save money earlygame 
+
+  //function to replicate smart supply and save money earlygame should we need it (agriculture)
   dumbSupply() {
     if (this.ns.corporation.hasUnlock("Smart Supply")) { return; }
     const divs = this.ns.corporation.getCorporation().divisions;
@@ -141,42 +161,41 @@ export class Business {
         this.employeeSatisfactionCheck(); //stage 1
         break;
       case 2:
-        // if (this.stage[1] == 0) this.ns.print("Buying first production multiplier material batch");
-        // this.purchaseMaterials(0); //not doing agristart anymore for now
-        this.ns.print("Imbezzlement initiating");
-        this.restaurantFraud(); //stage 2
+        if (this.stage[1] == 0) this.ns.print("Imbezzlement initiating");
+        this.restaurantFraud(1); //stage 2
         break;
       case 3:
         if (this.stage[1] == 0) this.ns.print("Accepting the first investor offer.");
         this.invest(); //stage 3 //1st investor offer is around 15 trillion
         break;
       case 4:
-        this.ns.print("Now to do it again but times 6");
-        this.upgradeStuff(1); //stage 4
+        if (this.stage[1] == 0) this.ns.print("Now to do it again but times 6");
+        this.enronFraudPrep(); //stage 4 // this is where we're still building
         break;
       case 5:
         if (this.stage[1] == 0) this.ns.print("Waiting for the employers stats to rise for the second time");
         this.employeeSatisfactionCheck(); //stage 5
         break;
       case 6:
-        if (this.stage[1] == 0) this.ns.print("Buying second production multiplier material batch");
-        this.purchaseMaterials(1); //stage 6
+        if (this.stage[1] == 0) this.ns.print("Buying false securities material batch");
+        this.restaurantFraud(2); //stage 6
         break;
       case 7:
-        if (this.stage[1] == 0) this.ns.print("Reassign employees");
-        this.reAssignEmployees(1); //stage 7
+        if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
+        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 7
         break;
       case 8:
-        if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 8
+        if (this.stage[1] == 0) this.ns.print("Time to actually make a real company");
+        this.expand(); //stage 8
         break;
       case 9:
-        this.ns.print("Last Agriculture upgrades");
-        this.lastAGUpgrades(); //stage 9
+        this.ns.print("Assigning Employees and Starting a product");
+        this.reAssignEmployees(); //stage 9
         break;
       case 10:
-        if (this.stage[1] == 0) this.ns.print("Buying third production multiplier material batch");
-        this.purchaseMaterials(2); //stage 10
+        if (this.stage[1] == 0) this.ns.print("Good for Now, spawning buyCorpStuff");
+        //this.purchaseMaterials(2); //stage 10
+        this.ns.spawn("buycorpstuff.js");
         break;
       case 11:
         if (this.stage[1] == 0) this.ns.print("Expand to tobacco");
@@ -190,8 +209,8 @@ export class Business {
     }
   }
 
-  //Corp initialization. Creating the corp, expanding to agriculture and its' cities,
-  //hiring and assigning in thosecities and buying some upgrades
+  //Corp initialization. Creating the corp, expanding to restaurant and its' cities,
+  //hiring and assigning in those cities and buying some upgrades
   startstuff() {
     if (this.stage[1] == 0) {
       if (!this.ns.corporation.hasCorporation()) { try { this.ns.corporation.createCorporation(this.corpName, false); } catch { this.ns.print("not in bitnode 3, attempting to self-fund"); } }
@@ -210,9 +229,7 @@ export class Business {
         while (this.ns.corporation.hireEmployee(this.divNames.restName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
         this.ns.corporation.setAutoJobAssignment(this.divNames.restName, city, this.jobs[2], 6);
       }
-      for (let i = 0; i < 27; i++) {
-        this.ns.corporation.hireAdVert(this.divNames.restName);
-      }
+      for (let i = 0; i < 24; i++) { this.ns.corporation.hireAdVert(this.divNames.restName); }
 
       for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
       for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.divNames.restName, city, 2); }
@@ -222,32 +239,41 @@ export class Business {
     }
   }
 
-  //Purchase materials (or set purchase amounts to 0), the wanted amounts are saved in the materialPhases array
-  purchaseMaterials(phase) {
+  //expand to Agriculture, Tobacco, and Chemicals
+  expand() {
     if (this.stage[1] == 0) {
-      for (let city of this.cities) {
-        for (let i = 0; i < 4; i++) {
-          this.ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[i], this.boostPhases[phase][i] / 10);
+      this.ns.corporation.purchaseUnlock("Smart Supply");
+      this.ns.corporation.expandIndustry(this.divTypes.agriType, this.divNames.agriName);
+      this.ns.corporation.expandIndustry(this.divTypes.chemType, this.divNames.chemName);
+      this.ns.corporation.expandIndustry(this.divTypes.tobaccoType, this.divNames.tobaccoName);
+      const newDivs = [this.divNames.agriName, this.divNames.chemName, this.divNames.tobaccoName];
+      for (const division of newDivs) {
+        for (let city of this.cities) {
+          if (!this.ns.corporation.getDivision(division).cities.includes(city)) { this.ns.corporation.expandCity(division, city); }
+          if (!this.ns.corporation.hasWarehouse(division, city)) { this.ns.corporation.purchaseWarehouse(division, city); }
+          this.ns.corporation.setSmartSupply(division, city, true);
+          this.ns.corporation.upgradeOfficeSize(division, city, 30 - this.ns.corporation.getOffice(division, city).size);
+          while (this.ns.corporation.hireEmployee(division, city)) { }
+          this.ns.corporation.upgradeWarehouse(division, city, (20 - this.ns.corporation.getWarehouse(city, division).level))
         }
       }
-      this.stage[1] += 1;
-    }
-    else {
-      for (let city of this.cities) {
-        for (let i = 0; i < 4; i++) {
-          this.ns.corporation.buyMaterial(this.agriName, city, this.boostStock[i], 0);
-        }
+      for (let i = 0; i < 50; i++) {
+        this.ns.corporation.hireAdVert(this.divName.tobaccoName)
       }
-      this.stage[0] += 1;
-      this.stage[1] = 0;
+      this.ns.corporation.upgradeOfficeSize(this.divName.tobaccoName, this.cities[0], 30);
+      while (this.ns.corporation.hireEmployee(this.divName.tobaccoName, this.cities[0])) { }
     }
+    this.stage[0] += 1;
   }
 
   //Wait till the employee stats are high enough and then go to the next stage
   employeeSatisfactionCheck() {
     this.ns.clearLog();
-    const avgs = [0, 0];
+    const overallAvgs = [];
+    let finalMorAvg = 0;
+    let finalEneAvg = 0;
     for (const division of this.ns.corporation.getCorporation().divisions) {
+      const avgs = [0, 0];
       this.ns.print("   " + division);
       this.ns.print("");
       for (const city of this.ns.corporation.getDivision(division).cities) {
@@ -256,56 +282,131 @@ export class Business {
       }
       this.ns.print("   avg morale: " + (avgs[0] / 6).toFixed(3) + "/95");
       this.ns.print("   avg energy: " + (avgs[1] / 6).toFixed(3) + "/95");
+      overallAvgs.push(avgs);
       this.stage[1]++;
     }
-    if (avgs[0] / 6 >= 95 && avgs[1] / 6 >= 95 && this.stage[1] > 0) {
+    for (i = 0; i < overallAvgs.length; i++) {
+      finalMorAvg += overallAvgs[i][0];
+      finalEneAvg += overallAvgs[i][1];
+    }
+    finalMorAvg = finalMorAvg / (this.ns.corporation.getCorporation().divisions.length * this.cities.length);
+    finalEneAvg = finalEneAvg / (this.ns.corporation.getCorporation().divisions.length * this.cities.length);
+    if (finalMorAvg >= 95 && finalEneAvg >= 95 && this.stage[1] > 0) {
       this.stage[0] += 1; this.stage[1] = 0;
     }
   }
 
   //Fill Warehouses with Real Estate to sell
-  restaurantFraud() {
-    if (this.stage[1] == 0) {
-      for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
-        const rlEstConst = ns.corporation.getMaterialData(this.boostStock[3]);
-        const warehouse = ns.corporation.getWarehouse(this.divNames.restName, city);
-        ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], (((warehouse.size - warehouse.sizeUsed) / rlEstConst.size) / 10));
-      }
-      this.stage[1] = 1;
-    } else if (this.stage[1] == 1) {
-      if (ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+  restaurantFraud(phase) {
+    if (phase == 1) {
+      if (this.stage[1] == 0) {
         for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
-          ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], 0);
+          const rlEstConst = this.ns.corporation.getMaterialData(this.boostStock[3]);
+          const warehouse = this.ns.corporation.getWarehouse(this.divNames.restName, city);
+          this.ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], (((warehouse.size - warehouse.sizeUsed) / rlEstConst.size) / 10));
         }
-        this.stage[1] = 2;
+        this.stage[1] = 1;
+      } else if (this.stage[1] == 1) {
+        if (this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+          for (const city of this.ns.corporation.getDivision(this.divNames.restName).cities) {
+            this.ns.corporation.buyMaterial(this.divNames.restName, city, this.boostStock[3], 0);
+          }
+          this.stage[1] = 2;
+        }
+      } else if (this.stage[1] == 2) {
+        for (const city of ns.corporation.getDivision(this.divNames.restName).cities) {
+          this.ns.corporation.sellMaterial(this.divNames.restName, city, this.boostStock[3], "MAX", "MP");
+        }
+        this.stage[0] += 1;
+        this.stage[1] = 0;
       }
-    } else if (this.stage[1] == 2) {
-      for (const city of ns.corporation.getDivision("DelTacoCorp").cities) {
-        ns.corporation.sellMaterial("DelTacoCorp", city, "Real Estate", "MAX", "MP");
-      }
-      this.stage[0] += 1;
-      this.stage[1] = 0;
-    }
 
+    }
+    if (phase == 2) {
+      if (this.stage[1] == 0) {
+        for (const division of this.ns.corporation.getCorporation().divisions) {
+          for (const city of this.ns.corporation.getDivision(division).cities) {
+            const rlEstConst = this.ns.corporation.getMaterialData(this.boostStock[3]);
+            const warehouse = this.ns.corporation.getWarehouse(division, city);
+            this.ns.corporation.buyMaterial(division, city, this.boostStock[3], (((warehouse.size - warehouse.sizeUsed) / rlEstConst.size) / 10));
+          }
+        }
+        this.stage[1] = 1;
+      } else if (this.stage[1] == 1) {
+        if (ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+          for (const division of this.ns.corporation.getCorporation().divisions) {
+            for (const city of this.ns.corporation.getDivision(division).cities) {
+              ns.corporation.buyMaterial(division, city, this.boostStock[3], 0);
+            }
+          }
+          this.stage[1] = 2;
+        }
+      } else if (this.stage[1] == 2) {
+        for (const division of this.ns.corporation.getCorporation().divisions) {
+          for (const city of this.ns.corporation.getDivision(division).cities) {
+            ns.corporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
+          }
+        }
+        this.stage[0] += 1;
+        this.stage[1] = 0;
+      }
+    }
   }
 
-  //Reassigning the employess so that nobody works in R&D
+  //Assigning employees everywhere (and making a product at tobacco)
   reAssignEmployees() {
-    for (let city of this.cities) {
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 0);
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 3);
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 2);
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 2);
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 2);
-      this.ns.corporation.upgradeWarehouse(this.agriName, city);
+    const divs = [this.divNames.agriName, this.divNames.chemName, this.divNames.tobaccoName];
+    const rests = [this.divNames.restName, this.divNames.restFraudNames[0], this.divNames.restFraudNames[1], this.divNames.restFraudNames[2], this.divNames.restFraudNames[3], this.divNames.restFraudNames[4]];
+    for (const division of this.ns.corporation.getCorporation().divisions) {
+      for (const city of this.cities) {
+        for (const job of this.jobs) { //set all jobs to none everywhere
+          ns.corporation.setAutoJobAssignment(division, prodCity, job, 0);
+        }
+      }
     }
+    for (const rest of rests) {
+      for (const city of this.cities) { //set all these fools to research and development.
+        ns.corporation.setAutoJobAssignment(rest, city, job[4], this.ns.corporation.getOffice(division, city).numEmployees);
+      } //we won't be restauranting for a bit.
+    }
+
+    //this.jobs = ["Operations", "Engineer", "Business", "Management", "Research & Development"];
+    for (let i = 0; i < 2; i++) { //this will work for agriculture and chemicals.
+      for (const city of this.cities) {
+        this.ns.corporation.setAutoJobAssignment(divs[i], city, this.jobs[4], 6);
+        this.ns.corporation.setAutoJobAssignment(divs[i], city, this.jobs[0], 6);
+        this.ns.corporation.setAutoJobAssignment(divs[i], city, this.jobs[1], 9);
+        this.ns.corporation.setAutoJobAssignment(divs[i], city, this.jobs[2], 3);
+        this.ns.corporation.setAutoJobAssignment(divs[i], city, this.jobs[3], 6);
+      }
+    }
+    //now tobacco
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[4], 0); //this formula scales, and is for product city
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
+
+    for (let i = 1; i < 6; i++) { //support cities
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[5], 0);
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 20), 1));
+      //this little gem of a logic will assign all remaining employees to the remaining job incrementally
+      let rdNum = 0; //in a try/catch bracket because it tries to break the script otherwise.
+      try { while (this.ns.corporation.setAutoJobAssignment(division, city, jobs[4], rdNum++)) { } } catch { };
+    }
+    //finally, lets start a product.
+    const funds = this.ns.corporation.getCorporation().funds * 0.01
+    this.ns.corporation.makeProduct(this.divNames.tobaccoName, this.cities[0], this.divProd.tob, funds, funds);
 
     this.stage[0]++;
     this.stage[1] = 0;
   }
 
   //Accept investor offers after 10 cycles
-  invest() {
+  invest(round) {
     if (this.stage[1] == 0) {
       this.ns.print("waiting for a bit, just in case the investors might give a bit more money");
     }
@@ -320,44 +421,58 @@ export class Business {
     }
     else if (this.ns.corporation.getCorporation().state != "PURCHASE") { ns.sleep(0); }
     else {
-      this.ns.tprint("investment offer round " + this.ns.corporation.getInvestmentOffer().round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+      this.ns.tprint("investment offer round " + round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
       this.stage[1] = 0;
     }
   }
 
-  //buy more upgrades, office space, and warehouse space
-  upgradeStuff() {
-    this.ns.corporation.levelUpgrade(this.lvlUps[7]);
-    this.ns.corporation.levelUpgrade(this.lvlUps[1]);
-    this.ns.corporation.levelUpgrade(this.lvlUps[1]);
-    for (let i = 0; i < 8; i++) {
-      this.ns.corporation.levelUpgrade(this.lvlUps[0]);
-      this.ns.corporation.levelUpgrade(this.lvlUps[1]);
+  //this is where we go ham and expand to 6 restaurants and do securities fraud on all 6 of them.
+  enronFraudPrep() {
+    const fraudNames = [];
+    fraudNames.push(this.divNames.restName);
+    for (const name of this.divNames.fraudNames) {
+      fraudNames.push(name);
     }
-    for (let city of this.cities) {
-      for (let i = 0; i < 2; i++) {
-        this.ns.corporation.upgradeOfficeSize(this.agriName, city, 3); // this works
-        while (this.ns.corporation.hireEmployee(this.agriName, city)) { }; // this works
-        /*const jobAssign = [1, 1, 1, 1, 5]; //this or the below doesn't work
-        for (let i = 0; i < 5; i++); { this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[i], jobAssign[i]); }
-        */
+    for (const div of fraudNames) {
+      if (div == this.divNames.restName) { continue; }
+      this.ns.corporation.expandIndustry(this.divTypes.restType, div);
+      for (let city of this.cities) {
+        if (!this.ns.corporation.getDivision(div).cities.includes(city)) { ns.corporation.expandCity(div, city); }
+        if (!this.ns.corporation.hasWarehouse(div, city)) { this.ns.corporation.purchaseWarehouse(div, city) }
+        this.ns.corporation.upgradeOfficeSize(div, city, 3);
+        while (this.ns.corporation.hireEmployee(div, city)) { }
+        this.ns.corporation.setAutoJobAssignment(div, city, this.jobs[2])
+        this.ns.corporation.upgradeWarehouse(div, city, 2);
       }
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[0], 1)
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[1], 1)
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[2], 1)
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[3], 1)
-      this.ns.corporation.setAutoJobAssignment(this.agriName, city, this.jobs[4], 5)
+      for (let i = 0; i < 24; i++) { this.ns.corporation.hireAdVert(div) }
+      //the goal here is to set the new rest divs exactly to the old one, and then upgrade them all equally together.
+    }
+    //all new upgrades done to all 6 divs start here.
+    //this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
+    for (let i = 0; i < 10; i++) {
+      this.ns.corporation.levelUpgrade(this.lvlUps[1]); //most upgrades to level 10
+      this.ns.corporation.levelUpgrade(this.lvlUps[2]);
+      this.ns.corporation.levelUpgrade(this.lvlUps[3]);
+      this.ns.corporation.levelUpgrade(this.lvlUps[4]);
+      this.ns.corporation.levelUpgrade(this.lvlUps[5]);
+      this.ns.corporation.levelUpgrade(this.lvlUps[6]); //especially wilson's
+      this.ns.corporation.levelUpgrade(this.lvlUps[9]);
+    }
+    for (let i = 0; i < 47; i++) {
+      this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
+    }
+    for (const division of this.ns.corporation.getCorporation().divisions) {
+      for (let i = 0; i < (54 - ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
+      for (const city of this.cities) {
+        ns.corporation.upgradeOfficeSize(division, city, (30 - ns.corporation.getOffice(division, city).size));
+        while (ns.corporation.hireEmployee(division, city, "Business")) { }
+        ns.corporation.upgradeWarehouse(division, city, (10 - ns.corporation.getWarehouse(division, city).level));
+      }
     }
 
-    for (let i = 0; i < 7; i++) {
-      for (let city of this.cities) {
-        this.ns.corporation.upgradeWarehouse(this.agriName, city, 4);
-      }
-    }
     this.stage[0] += 1;
-    this.stage[1] = 0;
   }
 
   //Buy last upgrades for Agriculture
