@@ -21,7 +21,7 @@ export async function divisPurchases(ns) {
         supportExpCost += supportExps[i];
         supportWHCost += supportWHs[i];
       }
-      let y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOfficeSize(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
+      let y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOffice(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
       if (!supportExps.every((number) => number === supportExps[0])) {
         ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
         while (!supportExps.every((number) => number === supportExps[0])) {
@@ -34,7 +34,7 @@ export async function divisPurchases(ns) {
               await ns.sleep(0);
             }
           }
-          y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOfficeSize(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
+          y = Math.max(ns.corporation.getOffice(division, prodCity).size, ns.corporation.getOffice(division, supportCities[0]).size, ns.corporation.getOffice(division, supportCities[1]).size, ns.corporation.getOffice(division, supportCities[2]).size, ns.corporation.getOffice(division, supportCities[3]).size, ns.corporation.getOffice(division, supportCities[4]).size);
           supportExps = [];
           for (const city of supportCities) {
             supportExps.push(ns.corporation.getOfficeSizeUpgradeCost(division, city, 15));
@@ -77,6 +77,7 @@ export async function divisPurchases(ns) {
       if (ns.corporation.getOffice(division, supportCities[0]).size < 15) {
         for (const city of supportCities) {
           ns.corporation.upgradeOfficeSize(division, city, (15 - ns.corporation.getOffice(division, city).size));
+          while (ns.corporation.hireEmployee(division, city)) { }
         }
       }
       if ((funds * 0.3) / divisions.length >= advertCost || (funds * 0.3) / divisions.length >= officeExpCost) {
