@@ -366,7 +366,7 @@ export class Business {
     }
     for (const rest of rests) {
       for (const city of this.cities) { //set all these fools to research and development.
-        this.ns.corporation.setAutoJobAssignment(rest, city, job[4], this.ns.corporation.getOffice(division, city).numEmployees);
+        this.ns.corporation.setAutoJobAssignment(rest, city, this.jobs[4], this.ns.corporation.getOffice(division, city).numEmployees);
       } //we won't be restauranting for a bit.
     }
 
@@ -413,8 +413,8 @@ export class Business {
     //investor evaluation takes into account 10 cycles
     //and we want them to take into account the current high earning cycles,
     //not the old low earning cycles, so we'll wait for a bit
-    if (this.stage[1] <= 30 && this.investNum < this.ns.corporation.getInvestmentOffer().funds) {
-      this.ns.print("waiting cycles: " + this.stage[1] + "/30. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
+    if (this.stage[1] <= 10 && this.investNum < this.ns.corporation.getInvestmentOffer().funds) {
+      this.ns.print("waiting cycles: " + this.stage[1] + "/10. investors are currently offering: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.stage[1] += 1;
       this.investNum = this.ns.corporation.getInvestmentOffer().funds;
       // if (this.investNum > this.ns.corporation.getInvestmentOffer().funds) { this.ns.print("accepting offer before it downturns anymore"); this.ns.corporation.acceptInvestmentOffer(); }
@@ -450,14 +450,16 @@ export class Business {
     }
     //all new upgrades done to all 6 divs start here.
     //this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
-    for (let i = 0; i < 10; i++) {
-      this.ns.corporation.levelUpgrade(this.lvlUps[1]); //most upgrades to level 10
+    for (let i = 0; i < 20; i++) {
+      this.ns.corporation.levelUpgrade(this.lvlUps[1]); //most upgrades to level 20
       this.ns.corporation.levelUpgrade(this.lvlUps[2]);
       this.ns.corporation.levelUpgrade(this.lvlUps[3]);
       this.ns.corporation.levelUpgrade(this.lvlUps[4]);
       this.ns.corporation.levelUpgrade(this.lvlUps[5]);
-      this.ns.corporation.levelUpgrade(this.lvlUps[6]); //especially wilson's
       this.ns.corporation.levelUpgrade(this.lvlUps[9]);
+    }
+    for (let i = 0; i < 10; i++) {
+      this.ns.corporation.levelUpgrade(this.lvlUps[6]); //wilson's level 10
     }
     for (let i = 0; i < 47; i++) {
       this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
