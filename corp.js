@@ -463,7 +463,7 @@ export class Business {
       this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
     }
     for (const division of this.ns.corporation.getCorporation().divisions) {
-      for (let i = 0; i < (54 - this.nscorporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
+      for (let i = 0; i < (54 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
       for (const city of this.cities) {
         this.ns.corporation.upgradeOfficeSize(division, city, (30 - this.ns.corporation.getOffice(division, city).size));
         while (ns.corporation.hireEmployee(division, city, "Business")) { }
