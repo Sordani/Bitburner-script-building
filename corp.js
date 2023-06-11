@@ -258,10 +258,10 @@ export class Business {
         }
       }
       for (let i = 0; i < 50; i++) {
-        this.ns.corporation.hireAdVert(this.divName.tobaccoName)
+        this.ns.corporation.hireAdVert(this.divNames.tobaccoName)
       }
-      this.ns.corporation.upgradeOfficeSize(this.divName.tobaccoName, this.cities[0], 30);
-      while (this.ns.corporation.hireEmployee(this.divName.tobaccoName, this.cities[0])) { }
+      this.ns.corporation.upgradeOfficeSize(this.divNames.tobaccoName, this.cities[0], 30);
+      while (this.ns.corporation.hireEmployee(this.divNames.tobaccoName, this.cities[0])) { }
     }
     this.stage[0] += 1;
   }
@@ -360,7 +360,7 @@ export class Business {
     for (const division of this.ns.corporation.getCorporation().divisions) {
       for (const city of this.cities) {
         for (const job of this.jobs) { //set all jobs to none everywhere
-          this.ns.corporation.setAutoJobAssignment(division, prodCity, job, 0);
+          this.ns.corporation.setAutoJobAssignment(division, city, job, 0);
         }
       }
     }
@@ -382,10 +382,10 @@ export class Business {
     }
     //now tobacco
     this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[4], 0); //this formula scales, and is for product city
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(division, prodCity).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(division, city).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(division, city).numEmployees / 3.5));
 
     for (let i = 1; i < 6; i++) { //support cities
       this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[5], 0);
@@ -463,9 +463,9 @@ export class Business {
       this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
     }
     for (const division of this.ns.corporation.getCorporation().divisions) {
-      for (let i = 0; i < (54 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
+      for (let i = 0; i < (70 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
       for (const city of this.cities) {
-        this.ns.corporation.upgradeOfficeSize(division, city, (30 - this.ns.corporation.getOffice(division, city).size));
+        this.ns.corporation.upgradeOfficeSize(division, city, (45 - this.ns.corporation.getOffice(division, city).size));
         while (this.ns.corporation.hireEmployee(division, city, "Business")) { }
         this.ns.corporation.upgradeWarehouse(division, city, (10 - this.ns.corporation.getWarehouse(division, city).level));
       }
