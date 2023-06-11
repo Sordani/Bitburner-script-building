@@ -229,10 +229,10 @@ export class Business {
         while (this.ns.corporation.hireEmployee(this.divNames.restName, city)) { } //hires employee and returns true. empty brackets simply makes it test the statement immediately again.
         this.ns.corporation.setAutoJobAssignment(this.divNames.restName, city, this.jobs[2], 6);
       }
-      for (let i = 0; i < 24; i++) { this.ns.corporation.hireAdVert(this.divNames.restName); }
+      for (let i = 0; i < 26; i++) { this.ns.corporation.hireAdVert(this.divNames.restName); }
 
-      for (let i = 0; i < 3; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
-      for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.divNames.restName, city, 2); }
+      for (let i = 0; i < 2; i++) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); }
+      for (let city of this.cities) { this.ns.corporation.upgradeWarehouse(this.divNames.restName, city, 1); }
 
       this.stage[0] += 1;
       this.stage[1] = 0;
@@ -254,7 +254,7 @@ export class Business {
           this.ns.corporation.setSmartSupply(division, city, true);
           this.ns.corporation.upgradeOfficeSize(division, city, 30 - this.ns.corporation.getOffice(division, city).size);
           while (this.ns.corporation.hireEmployee(division, city)) { }
-          this.ns.corporation.upgradeWarehouse(division, city, (20 - this.ns.corporation.getWarehouse(city, division).level))
+          this.ns.corporation.upgradeWarehouse(division, city, (20 - this.ns.corporation.getWarehouse(division, city).level))
         }
       }
       for (let i = 0; i < 50; i++) {
@@ -333,7 +333,7 @@ export class Business {
         }
         this.stage[1] = 1;
       } else if (this.stage[1] == 1) {
-        if (ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
+        if (this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).sizeUsed >= this.ns.corporation.getWarehouse(this.divNames.restName, this.cities[0]).size * 0.95) {
           for (const division of this.ns.corporation.getCorporation().divisions) {
             for (const city of this.ns.corporation.getDivision(division).cities) {
               this.ns.corporation.buyMaterial(division, city, this.boostStock[3], 0);
@@ -344,7 +344,7 @@ export class Business {
       } else if (this.stage[1] == 2) {
         for (const division of this.ns.corporation.getCorporation().divisions) {
           for (const city of this.ns.corporation.getDivision(division).cities) {
-           this.nscorporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
+           this.ns.corporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
           }
         }
         this.stage[0] += 1;
@@ -466,7 +466,7 @@ export class Business {
       for (let i = 0; i < (54 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
       for (const city of this.cities) {
         this.ns.corporation.upgradeOfficeSize(division, city, (30 - this.ns.corporation.getOffice(division, city).size));
-        while (ns.corporation.hireEmployee(division, city, "Business")) { }
+        while (this.ns.corporation.hireEmployee(division, city, "Business")) { }
         this.ns.corporation.upgradeWarehouse(division, city, (10 - this.ns.corporation.getWarehouse(division, city).level));
       }
     }
