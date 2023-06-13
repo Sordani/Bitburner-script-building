@@ -382,17 +382,17 @@ export class Business {
     }
     //now tobacco
     this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[4], 0); //this formula scales, and is for product city
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(divs[2], city).numEmployees / 3.5));
-    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(divs[2], city).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[0], Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[1], Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[2], Math.floor(0.5 * this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
+    this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
 
     for (let i = 1; i < 6; i++) { //support cities
       this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[5], 0);
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], city).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
       //this little gem of a logic will assign all remaining employees to the remaining job incrementally
       let rdNum = 0; //in a try/catch bracket because it tries to break the script otherwise.
       try { while (this.ns.corporation.setAutoJobAssignment(divs[2], city, jobs[4], rdNum++)) { } } catch { };
@@ -421,6 +421,7 @@ export class Business {
     }
     else if (this.ns.corporation.getCorporation().state != "PURCHASE") {this.nssleep(0); }
     else {
+      this.ns.tprint("funds remaining before accepting investment round: " + this.ns.corporation.getCorporation().funds);
       this.ns.tprint("investment offer round " + this.ns.corporation.getInvestmentOffer().round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
