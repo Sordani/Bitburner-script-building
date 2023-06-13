@@ -1123,16 +1123,17 @@ export class Business {
   //logic to accept the 3rd and 4th investors
   investAgain() {
     if (this.ns.corporation.getInvestmentOffer().funds > 3e16 && this.ns.corporation.getInvestmentOffer().round == 3) {
+      this.ns.tprint("round 3 investment offer accepted: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
-    }
-    if (this.ns.corporation.getInvestmentOffer().funds > 5e18 && this.ns.corporation.getInvestmentOffer().round == 4) {
+    } else if (this.ns.corporation.getInvestmentOffer().funds > 5e18 && this.ns.corporation.getInvestmentOffer().round == 4) {
+       this.ns.tprint("round 4 investment offer accepted: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
     }
   }
 
   //function to make the log pretty
   logPrint() {
-    this.ns.resizeTail(300, 300);
+    this.ns.resizeTail(350, 300);
     this.ns.clearLog();
     this.ns.print("Corporation: " + this.ns.corporation.getCorporation().name);
     this.ns.print("Divisions: " + this.ns.corporation.getCorporation().divisions.length);
@@ -1140,8 +1141,8 @@ export class Business {
     this.ns.print("Expenses: " + this.ns.formatNumber(this.ns.corporation.getCorporation().expenses));
     this.ns.print("Profit: " + this.ns.formatNumber(this.ns.corporation.getCorporation().revenue - this.ns.corporation.getCorporation().expenses));
     this.ns.print("Funds: " + this.ns.formatNumber(this.ns.corporation.getCorporation().funds, 3));
-    if (this.ns.corporation.getInvestmentOffer().round < 4 && !this.ns.corporation.getCorporation().public) { this.ns.print("Investment offers accepted: " + (this.ns.corporation.getInvestmentOffer().round - 1)); } else if (!this.ns.corporation.getCorporation().public) { this.ns.print("All investment offers accepted."); } else { this.ns.print("Gone public: True"); }
-    if (this.ns.corporation.getInvestmentOffer().round < 4 && !this.ns.corporation.getCorporation().public) { this.ns.print("Round " + this.ns.corporation.getInvestmentOffer().round + " Inv Offer: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3)); }
+    if (this.ns.corporation.getInvestmentOffer().round <= 4 && !this.ns.corporation.getCorporation().public) { this.ns.print("Investment offers accepted: " + (this.ns.corporation.getInvestmentOffer().round - 1)); } else if (!this.ns.corporation.getCorporation().public) { this.ns.print("All investment offers accepted."); } else { this.ns.print("Gone public: True"); }
+    if (this.ns.corporation.getInvestmentOffer().round <= 4 && !this.ns.corporation.getCorporation().public) { this.ns.print("Round " + this.ns.corporation.getInvestmentOffer().round + " Inv Offer: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3)); }
     this.ns.print("Shares owned: " + this.ns.formatNumber(this.ns.corporation.getCorporation().numShares));
     if (this.ns.corporation.getCorporation().public) { this.ns.print("Dividends: " + this.ns.corporation.getCorporation().dividendEarnings); }
     this.ns.print("Time Elapsed: " + this.ns.tFormat(Date.now() - this.startTime));
