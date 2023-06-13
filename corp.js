@@ -1120,6 +1120,15 @@ export class Business {
       }
     }
   }
+  //logic to accept the 3rd and 4th investors
+  investAgain() {
+    if (this.ns.corporation.getInvestmentOffer().funds > 3e16 && this.ns.corporation.getInvestmentOffer().round == 3) {
+      this.ns.corporation.acceptInvestmentOffer();
+    }
+    if (this.ns.corporation.getInvestmentOffer().funds > 5e18 && this.ns.corporation.getInvestmentOffer().round == 4) {
+      this.ns.corporation.acceptInvestmentOffer();
+    }
+  }
 
   //function to make the log pretty
   logPrint() {
@@ -1179,6 +1188,7 @@ export async function main(ns) {
       await ns.sleep(0);
     }
     //and to this part put things you want done exactly once per cycle
+    bus.investAgain();
     bus.expansionPlan();
     bus.boostPurchase();
     bus.setPrices();
