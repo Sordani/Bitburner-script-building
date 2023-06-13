@@ -182,7 +182,7 @@ export class Business {
         break;
       case 7:
         if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 7
+        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 7 //2nd investor offer is around 2.9 quadrillion
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Time to actually make a real company");
@@ -388,14 +388,14 @@ export class Business {
     this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
 
     for (let i = 1; i < 6; i++) { //support cities
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[5], 0);
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[5], 0);
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
       //this little gem of a logic will assign all remaining employees to the remaining job incrementally
       let rdNum = 0; //in a try/catch bracket because it tries to break the script otherwise.
-      try { while (this.ns.corporation.setAutoJobAssignment(divs[2], city, jobs[4], rdNum++)) { } } catch { };
+      try { while (this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[4], rdNum++)) { } } catch { };
     }
     //finally, lets start a product.
     const funds = this.ns.corporation.getCorporation().funds * 0.01
@@ -419,9 +419,9 @@ export class Business {
       this.investNum = this.ns.corporation.getInvestmentOffer().funds;
       // if (this.investNum > this.ns.corporation.getInvestmentOffer().funds) { this.ns.print("accepting offer before it downturns anymore"); this.ns.corporation.acceptInvestmentOffer(); }
     }
-    else if (this.ns.corporation.getCorporation().state != "PURCHASE") {this.nssleep(0); }
+    else if (this.ns.corporation.getCorporation().state != "PURCHASE") {this.ns.sleep(0); }
     else {
-      this.ns.tprint("funds remaining before accepting investment round: " + this.ns.corporation.getCorporation().funds);
+      this.ns.tprint("funds remaining before accepting investment round: " + this.ns.formatNumber(this.ns.corporation.getCorporation().funds, 3));
       this.ns.tprint("investment offer round " + this.ns.corporation.getInvestmentOffer().round + ": " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3));
       this.ns.corporation.acceptInvestmentOffer();
       this.stage[0] += 1;
@@ -451,7 +451,7 @@ export class Business {
     }
     //all new upgrades done to all 6 divs start here.
     //this.lvlUps = ["Smart Factories", "Smart Storage", "FocusWires", "Neural Accelerators", "Speech Processor Implants", "Nuoptimal Nootropic Injector Implants", "Wilson Analytics", "Project Insight", "ABC SalesBots"];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       this.ns.corporation.levelUpgrade(this.lvlUps[1]); //most upgrades to level 20
       this.ns.corporation.levelUpgrade(this.lvlUps[2]);
       this.ns.corporation.levelUpgrade(this.lvlUps[3]);
@@ -462,11 +462,11 @@ export class Business {
     for (let i = 0; i < 10; i++) {
       this.ns.corporation.levelUpgrade(this.lvlUps[6]); //wilson's level 10
     }
-    for (let i = 0; i < 47; i++) {
+    for (let i = 0; i < 68; i++) {
       this.ns.corporation.levelUpgrade(this.lvlUps[8]); //ABC salesbots level 50
     }
     for (const division of this.ns.corporation.getCorporation().divisions) {
-      for (let i = 0; i < (70 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
+      for (let i = 0; i < (80 - this.ns.corporation.getHireAdVertCount(division)); i++) { this.ns.corporation.hireAdVert(division); } //play with the number. set to 30 arbitrarily.
       for (const city of this.cities) {
         this.ns.corporation.upgradeOfficeSize(division, city, (45 - this.ns.corporation.getOffice(division, city).size));
         while (this.ns.corporation.hireEmployee(division, city, "Business")) { }
