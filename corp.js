@@ -182,7 +182,7 @@ export class Business {
         break;
       case 7:
         if (this.stage[1] == 0) this.ns.print("Accepting the second investor offer");
-        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 7 //2nd investor offer is around 2.9 quadrillion
+        this.invest(this.ns.corporation.getInvestmentOffer().round); //stage 7 //2nd investor offer is around 4 quadrillion
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Time to actually make a real company");
@@ -346,7 +346,7 @@ export class Business {
           for (const city of this.ns.corporation.getDivision(division).cities) {
            this.ns.corporation.sellMaterial(division, city, this.boostStock[3], "MAX", "MP");
           }
-        }
+        } //we will be left with negative 1.7 trillion.
         this.stage[0] += 1;
         this.stage[1] = 0;
       }
@@ -388,7 +388,7 @@ export class Business {
     this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[0], this.jobs[3], Math.ceil(this.ns.corporation.getOffice(divs[2], this.cities[0]).numEmployees / 3.5));
 
     for (let i = 1; i < 6; i++) { //support cities
-      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[5], 0);
+      this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[4], 0);
       this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
       this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[1], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
       this.ns.corporation.setAutoJobAssignment(divs[2], this.cities[i], this.jobs[2], Math.max(Math.floor(this.ns.corporation.getOffice(divs[2], this.cities[i]).numEmployees / 20), 1));
@@ -472,7 +472,7 @@ export class Business {
         while (this.ns.corporation.hireEmployee(division, city, "Business")) { }
         this.ns.corporation.upgradeWarehouse(division, city, (10 - this.ns.corporation.getWarehouse(division, city).level));
       }
-    }
+    } //these numbers leave us with 1.1 trillion left to purchase materials with.
 
     this.stage[0] += 1;
   }
