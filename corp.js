@@ -1098,21 +1098,21 @@ export class Business {
           if (this.ns.corporation.getWarehouse(division, city).size < 1000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 1000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 1000) { continue; }
           for (let i = 0; i < 4; i++) {
-            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i]) {
+            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i] && this.ns.corporation.getCorporation().funds > this.ns.corporation.getMaterial(division, city, boostOrder[i]).marketPrice * (div.first[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored)) {
               this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 5000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000) { continue; }
           for (let i = 0; i < 4; i++) {
-            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i]) {
+            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i] && this.ns.corporation.getCorporation().funds > this.ns.corporation.getMaterial(division, city, boostOrder[i]).marketPrice * (div.second[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored)) {
               this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 20000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000) { continue; }
           for (let i = 0; i < 4; i++) {
-            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.third[i]) {
+            if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.third[i] && this.ns.corporation.getCorporation().funds > this.ns.corporation.getMaterial(division, city, boostOrder[i]).marketPrice * (div.third[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored)) {
               this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.third[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
