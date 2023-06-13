@@ -14,6 +14,7 @@ export class Business {
   stage
   mats
   divProd
+  startTime
   constructor(ns) {
     /**@type {NS} */
     this.ns = ns;
@@ -66,7 +67,9 @@ export class Business {
       [2675, 96, 2445, 119400],
       [6500, 630, 3750, 84000]
     ];
+    this.startTime = Date.now();
     this.stage = [0, 0]; //stage, step
+
   }
 
   //Tea and Party function
@@ -1096,21 +1099,21 @@ export class Business {
           if (this.ns.corporation.getWarehouse(division, city).size < 1000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
+              this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 5000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
+              this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 20000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.third[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.third[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
+              this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.third[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored);
             }
           }
         }
@@ -1120,7 +1123,7 @@ export class Business {
 
   //function to make the log pretty
   logPrint() {
-    this.ns.resizeTail(300, 250);
+    this.ns.resizeTail(300, 300);
     this.ns.clearLog();
     this.ns.print("Corporation: " + this.ns.corporation.getCorporation().name);
     this.ns.print("Divisions: " + this.ns.corporation.getCorporation().divisions.length);
@@ -1132,6 +1135,7 @@ export class Business {
     if (this.ns.corporation.getInvestmentOffer().round < 4 && !this.ns.corporation.getCorporation().public) { this.ns.print("Round " + this.ns.corporation.getInvestmentOffer().round + " Inv Offer: " + this.ns.formatNumber(this.ns.corporation.getInvestmentOffer().funds, 3)); }
     this.ns.print("Shares owned: " + this.ns.formatNumber(this.ns.corporation.getCorporation().numShares));
     if (this.ns.corporation.getCorporation().public) { this.ns.print("Dividends: " + this.ns.corporation.getCorporation().dividendEarnings); }
+    this.ns.print("Time Elapsed: " + this.ns.tFormat(Date.now() - this.startTime));
   }
 }
 
