@@ -118,8 +118,12 @@ export class Business {
   //sets stage to appropriate step
   setStage() {
     //this.stage should be incremented based on existing data checks.
-    if (this.ns.corporation.getInvestmentOffer().round >= 3 && this.ns.corporation.getDivision(this.divNames.tobaccoName).products.length >= 1 && this.ns.corporation.getCorporation().divisions.includes(this.divNames.chemName)) {
-      this.stage[0] = 10; //just checks to see if we've made it to the last step of the checkStage() so we can go straight to-the-moon again.
+    if (this.ns.corporation.hasCorporation()) {
+      if (this.ns.corporation.getCorporation().divisions.includes(this.divNames.tobaccoName)) {
+        if (this.ns.corporation.getInvestmentOffer().round >= 3 && this.ns.corporation.getDivision(this.divNames.tobaccoName).products.length >= 1 && this.ns.corporation.getCorporation().divisions.includes(this.divNames.chemName)) {
+          this.stage[0] = 10; //just checks to see if we've made it to the last step of the checkStage() so we can go straight to-the-moon again.
+        }
+      }
     }
   }
 
@@ -166,10 +170,15 @@ export class Business {
         this.expand(); //stage 8
         break;
       case 9:
-        this.ns.print("Assigning Employees and Starting a product");
+        if (this.stage[1] == 0) this.ns.print("Assigning Employees and Starting a product");
         this.reAssignEmployees(); //stage 9
         break;
       case 10:
+        if (this.stage[1] == 0) this.ns.print("Purchasing Boost Materials");
+        this.stage[0]++;
+        this.boostPurchase(); //stage 10
+        break;
+      case 11:
         if (this.stage[1] == 0) this.ns.print("The initial setup is complete. executing 'To the moon...' logic");
         this.stage[1]++;
         //stage 10
@@ -1004,7 +1013,7 @@ export class Business {
     let funds = this.ns.corporation.getCorporation().funds;
     const divisionNames = ["AgriCorp", "CamelCorp", "AquaCorp", "ChemCorp", "GoronCorp", "ForgeCorp", "MicroCorp", "SkyNetCorp", "RobotnicCorp", "ZoraCorp", "PharmaCorp", "HeartCorp", "CoiCorp", "DelTacoCorp", "JeffGoldblumCorp"];
     const divisionTypes = ["Agriculture", "Tobacco", "Spring Water", "Chemical", "Mining", "Refinery", "Computer Hardware", "Software", "Robotics", "Water Utilities", "Pharmaceutical", "Healthcare", "Fishing", "Restaurant", "Real Estate"];
-    const divisionFundsReq = [6e10, 7e10, 1e15, 7.5e11, 1e18, 1e18, 1e18, 1e21, 1e21, 1e24, 1e24, 1e24, 1e24, 1e24, 1e24];
+    const divisionFundsReq = [6e10, 7e10, 1e21, 7.5e11, 1e18, 1e18, 1e18, 1e21, 1e21, 1e24, 1e24, 1e24, 1e24, 1e24, 1e24];
     const divisions = this.ns.corporation.getCorporation().divisions;
     for (let i = 0; i < divisionNames.length; i++) {
       if (funds >= divisionFundsReq[i] && !divisions.includes(divisionNames[i])) {
@@ -1049,8 +1058,6 @@ export class Business {
     //we want graduating amounts. first some right off the bat values
     //then medium amounts, usually including warehouse purchases up to a limit
     //until the divisions that produce higher quality boost materials get pumping.
-    // //bail early for when we've started divisions that produce boost materials. 7 = hardware
-    if (this.ns.corporation.getCorporation().divisions.length > 7) { return; }
     const boostOrder = ["AI Cores", "Hardware", "Real Estate", "Robots"];
     const divBoost = { //data map that will organize purchase orders.
       agri: { //based entirely off Jeeks. I owe him and jakob entirely too much.
@@ -1084,26 +1091,26 @@ export class Business {
         for (const div of Object.values(divBoost)) {
           if (division != div.name) { continue; }
           //first increase warehouse. buffer for production and required materials 
-          //should be 40% and boost space should be 60% roughly
+          //should be 50% and boost space should be 50% roughly
           if (this.ns.corporation.getWarehouse(division, city).size < 1000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 1000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 1000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.first[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i]); } catch { }
+              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.first[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 5000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 5000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.second[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i]); } catch { }
+              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.second[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
             }
           }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000 && this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { while (this.ns.corporation.getCorporation().funds > this.ns.corporation.getUpgradeWarehouseCost(division, city) && this.ns.corporation.getWarehouse(division, city).size < 20000) { this.ns.corporation.upgradeWarehouse(division, city); } }
           if (this.ns.corporation.getWarehouse(division, city).size < 20000) { continue; }
           for (let i = 0; i < 4; i++) {
             if (this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored < div.third[i]) {
-              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.third[i]); } catch { }
+              try { this.ns.corporation.bulkPurchase(division, city, boostOrder[i], div.third[i] - this.ns.corporation.getMaterial(division, city, boostOrder[i]).stored); } catch { }
             }
           }
         }
