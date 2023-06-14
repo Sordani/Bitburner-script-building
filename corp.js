@@ -846,7 +846,7 @@ export class Business {
             case divNames[8]:
             case divNames[9]:
             case divNames[14]:
-              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[6], city).size * 0.01) / this.ns.corporation.getMaterialData("Hardware").size)) + " - IINV)/10)" + "-IPROD"); }
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)"); }
               break;
             default:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
@@ -867,13 +867,13 @@ export class Business {
         }
       }
       if (divisions.includes(divNames[8])) {
-        this.ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[7], city).size * 0.01) / this.ns.corporation.getMaterialData("AI Cores").size)) + " - IINV)/10)" + "-IPROD");
+        this.ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "(IINV+IPROD)*(-1)");
         for (let i = 0; i < divisions.length; i++) {
           switch (divNames[i]) {
             case divNames[8]:
               break;
             case divNames[11]:
-              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[8], city).size * 0.01) / this.ns.corporation.getMaterialData("Robots").size)) + " - IINV)/10)" + "-IPROD"); }
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)"); }
               break;
             default:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
@@ -1035,7 +1035,7 @@ export class Business {
       this.ns.corporation.goPublic(0);
       this.ns.corporation.issueDividends(0.001);
       this.ns.tprint("Went Public. dividends set to 0.001. time elapsed: " + this.ns.tFormat(Date.now() - this.startTime));
-    }
+    } //going public happens in bitnode 3 at 2 hours 15 minutes. keep it running to boost your dividends to the sky.
   }
 
   //function to check all the warehouses in each division to make sure we have space to produce and sell
