@@ -632,7 +632,7 @@ export class Business {
           for (let i = 0; i < officeExps.length; i++) {
             officeExpCost += officeExps[i];
           }
-          y = Math.max(this.ns.corporation.getOffice(division, cities[0]).size, this.ns.corporation.getOffice(division, cities[1]).size, this.ns.corporation.getOffice(division, cities[2]).size, this.ns.corporation.getOffice(division, cities[3]).size, this.ns.corporation.getOffice(division, cities[4]).size, this.ns.corporation.getOffice(division, cities[5]).size);
+          y = Math.max(this.ns.corporation.getOffice(division, this.cities[0]).size, this.ns.corporation.getOffice(division, this.cities[1]).size, this.ns.corporation.getOffice(division, this.cities[2]).size, this.ns.corporation.getOffice(division, this.cities[3]).size, this.ns.corporation.getOffice(division, this.cities[4]).size, this.ns.corporation.getOffice(division, this.cities[5]).size);
           funds = this.ns.corporation.getCorporation().funds * 0.75;
           await this.ns.sleep(0);
         }
@@ -722,6 +722,7 @@ export class Business {
           this.ns.corporation.setAutoJobAssignment(division, city, this.jobs[0], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 5), 1));
           this.ns.corporation.setAutoJobAssignment(division, city, this.jobs[2], Math.max(Math.floor(0.5 * this.ns.corporation.getOffice(division, city).numEmployees / 5), 1));
           this.ns.corporation.setAutoJobAssignment(division, city, this.jobs[3], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 5), 1));
+          if (this.ns.corporation.getOffice(division, city).numEmployees <= 3) { continue; }
           this.ns.corporation.setAutoJobAssignment(division, city, this.jobs[4], Math.max(Math.floor(this.ns.corporation.getOffice(division, city).numEmployees / 5), 1));
           let engNum = 0;
           try { while (this.ns.corporation.setAutoJobAssignment(division, city, this.jobs[1], engNum++)) { } } catch { };
@@ -845,7 +846,7 @@ export class Business {
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)"); }
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
               break;
           }
         }
@@ -859,7 +860,7 @@ export class Business {
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(IINV+IPROD)*(-1)"); }
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * cities.length) * 5));
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 5)); }
               break;
           }
         }
@@ -874,7 +875,7 @@ export class Business {
               this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)");
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
+              this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10));
               break;
           }
         }
@@ -913,7 +914,7 @@ export class Business {
             case divNames[14]:
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[14], city, divNames[i], city, "Real Estate", "(EPROD/10)/" + ((divNames.length * cities.length) * 10));
+              this.ns.corporation.exportMaterial(divNames[14], city, divNames[i], city, "Real Estate", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10));
               break;
           }
         }
