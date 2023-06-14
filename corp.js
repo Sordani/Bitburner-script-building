@@ -170,7 +170,7 @@ export class Business {
         break;
       case 8:
         if (this.stage[1] == 0) this.ns.print("Time to actually make a real company");
-        this.expand(); //stage 8
+        this.expand(); //stage 8 //if selling off divisions becomes scriptable, sell this.divNames.restFraudNames around here.
         break;
       case 9:
         if (this.stage[1] == 0) this.ns.print("Assigning Employees and Starting a product");
@@ -474,11 +474,13 @@ export class Business {
       if (this.divNames.restFraudNames.includes(division)) { continue; }
       if (this.divNames.restName.includes(division) && this.ns.corporation.getCorporation().funds < 1e21) { continue; }
       if (this.ns.corporation.getDivision(division).makesProducts) {
+        this.ns.corporation.setSmartSupply(division, this.cities[0], true); //for this.divNames.restName specifically.
         let advertCost = this.ns.corporation.getHireAdVertCost(division);
         let officeExpCost = this.ns.corporation.getOfficeSizeUpgradeCost(division, prodCity, 3);
         let supportExps = [];
         let supportWHs = [];
         for (const city of supportCities) {
+          this.ns.corporation.setSmartSupply(division, city, true); //for this.divNames.restName specifically.
           supportExps.push(this.ns.corporation.getOfficeSizeUpgradeCost(division, city, 3));
           supportWHs.push(this.ns.corporation.getUpgradeWarehouseCost(division, city));
         }
@@ -844,7 +846,7 @@ export class Business {
             case divNames[8]:
             case divNames[9]:
             case divNames[14]:
-              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)"); }
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[6], city).size * 0.01) / this.ns.corporation.getMaterialData("Hardware").size)) + " - IINV)/10)" + "-IPROD"); }
               break;
             default:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
@@ -865,13 +867,13 @@ export class Business {
         }
       }
       if (divisions.includes(divNames[8])) {
-        this.ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "(IINV+IPROD)*(-1)");
+        this.ns.corporation.exportMaterial(divNames[7], city, divNames[8], city, "AI Cores", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[7], city).size * 0.01) / this.ns.corporation.getMaterialData("AI Cores").size)) + " - IINV)/10)" + "-IPROD");
         for (let i = 0; i < divisions.length; i++) {
           switch (divNames[i]) {
             case divNames[8]:
               break;
             case divNames[11]:
-              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)"); }
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "((" + Math.ceil(((this.ns.corporation.getWarehouse(divNames[8], city).size * 0.01) / this.ns.corporation.getMaterialData("Robots").size)) + " - IINV)/10)" + "-IPROD"); }
               break;
             default:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
@@ -1032,6 +1034,7 @@ export class Business {
       if (!this.ns.corporation.hasUnlock("Shady Accounting")) { this.ns.corporation.purchaseUnlock("Shady Accounting"); }
       this.ns.corporation.goPublic(0);
       this.ns.corporation.issueDividends(0.001);
+      this.ns.tprint("Went Public. dividends set to 0.001. time elapsed: " + this.ns.tFormat(Date.now() - this.startTime));
     }
   }
 
