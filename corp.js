@@ -843,6 +843,7 @@ export class Business {
             case divNames[7]:
             case divNames[8]:
             case divNames[9]:
+            case divNames[14]:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Hardware", "(IINV+IPROD)*(-1)"); }
               break;
             default:
@@ -855,9 +856,7 @@ export class Business {
         for (let i = 0; i < divisions.length; i++) {
           switch (divNames[i]) {
             case divNames[7]:
-              break;
             case divNames[8]:
-              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(IINV+IPROD)*(-1)"); }
               break;
             default:
               if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[7], city, divNames[i], city, "AI Cores", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 5)); }
@@ -872,10 +871,10 @@ export class Business {
             case divNames[8]:
               break;
             case divNames[11]:
-              this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)");
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(IINV+IPROD)*(-1)"); }
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[6], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10));
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[8], city, divNames[i], city, "Robots", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
               break;
           }
         }
@@ -905,7 +904,6 @@ export class Business {
       }
       if (divisions.includes(divNames[14])) {
         this.ns.corporation.exportMaterial(divNames[0], city, divNames[14], city, "Plants", "(IINV+IPROD)*(-1)");
-        this.ns.corporation.exportMaterial(divNames[6], city, divNames[14], city, "Hardware", "(IINV+IPROD)*(-1)");
         this.ns.corporation.exportMaterial(divNames[3], city, divNames[14], city, "Water", "(IINV+IPROD)*(-1)");
         this.ns.corporation.exportMaterial(divNames[9], city, divNames[14], city, "Water", "(IINV+IPROD)*(-1)");
         this.ns.corporation.exportMaterial(divNames[5], city, divNames[14], city, "Metal", "(IINV+IPROD)*(-1)");
@@ -914,7 +912,7 @@ export class Business {
             case divNames[14]:
               break;
             default:
-              this.ns.corporation.exportMaterial(divNames[14], city, divNames[i], city, "Real Estate", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10));
+              if (divisions.includes(divNames[i])) { this.ns.corporation.exportMaterial(divNames[14], city, divNames[i], city, "Real Estate", "(EPROD/10)/" + ((divNames.length * this.cities.length) * 10)); }
               break;
           }
         }
