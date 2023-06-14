@@ -749,7 +749,7 @@ export class Business {
         if (this.ns.corporation.getDivision(division).researchPoints >= this.ns.corporation.getResearchCost(division, name) * 30 && !this.ns.corporation.hasResearched(division, name)) { this.ns.print("purchasing research: " + name + " in " + division); this.ns.corporation.research(division, name); }
       }
       if (this.ns.corporation.getDivision(division).makesProducts) {
-        if (this.ns.corporation.getDivision(division).researchPoints >= (this.ns.corporation.getResearchCost(division, prodrdNames[0]) * 3.5) * 30) {
+        if (this.ns.corporation.getDivision(division).researchPoints >= (this.ns.corporation.getResearchCost(division, prodrdNames[0]) * 3.5) * 10) {
           for (const name of prodrdNames) { this.ns.print("purchasing research: " + name + " in " + division); this.ns.corporation.research(division, name); }
         }
       }
