@@ -981,7 +981,7 @@ export class Business {
       }
       while (this.ns.corporation.getUpgradeLevel(this.lvlUps[2]) > this.ns.corporation.getUpgradeLevel(this.lvlUps[3])) {
         this.ns.corporation.levelUpgrade(this.lvlUps[3]);
-        await this.nssleep(0);
+        await this.ns.sleep(0);
       }
       while (this.ns.corporation.getUpgradeLevel(this.lvlUps[2]) > this.ns.corporation.getUpgradeLevel(this.lvlUps[4])) {
         this.ns.corporation.levelUpgrade(this.lvlUps[4]);
