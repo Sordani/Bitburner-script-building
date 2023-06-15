@@ -618,7 +618,7 @@ export class Business {
           this.ns.print("found inbalance in officeExps for " + division + ". Correcting");
           this.ns.print("officeExps: " + officeExps);
           if (funds < officeExpCost) { this.ns.print("not enough funds to correct. awaiting income."); return; }
-          for (const city of cities) {
+          for (const city of this.cities) {
             while (this.ns.corporation.getOffice(division, city).numEmployees < y) {
               this.ns.corporation.upgradeOfficeSize(division, city, 3);
               while (this.ns.corporation.hireEmployee(division, city)) { await this.ns.sleep(0); }
