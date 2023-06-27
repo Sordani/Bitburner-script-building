@@ -533,7 +533,7 @@ export class Business {
 					this.ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
 					while (!supportExps.every((number) => number === supportExps[0])) {
 						if (funds < supportExpCost) { this.ns.print("not enough funds to correct. awaiting funds"); return; }
-						for (city of supportCities) {
+						for (const city of supportCities) {
 							while (this.ns.corporation.getOffice(division, city).numEmployees < y) {
 								this.ns.corporation.upgradeOfficeSize(division, city, 3);
 								while (this.ns.corporation.hireEmployee(division, city)) { await this.ns.sleep(0); }
