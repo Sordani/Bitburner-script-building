@@ -18,3 +18,9 @@ change brain.js from the manager of early-hack-template to the automation script
 improve other scripts so that they can accomplish a job completely and then end to save resources.
 get pretty logs to manage all the inforamtion.
 next bitnode after satisfied with corps will be either sleeves or gangs.
+
+
+update 6/29/2023
+Bitnode 10 will be complete shortly. Corp.js updated to work in multiple scenarios of bitnode multipliers to cash (usually negative, but also could work effectively in positive environments too) and works with 2.3. changing brain.js to be the script i call that calls all the other scripts that will periodically check all the other scripts so that i can automate more of the game and be more ram efficient. shotgun.js is janky, but is bandaided by batchchecker to be killed and restarted.
+
+TODO: upgrade to continuous batcher. chop up scripts to be more ram efficient. automate every part of the game. unlock intelligence and the requisite bitnodes that attribute to intelligence grinding optimally. unlock singularity to automate more of the game. clean up script sprawl, implement more classes to group scripts that depend on each other together. move all classes to slibs.js. make logs prettier.
