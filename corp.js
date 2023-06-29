@@ -475,20 +475,20 @@ export class Business {
 		if (this.stage[1] == 1) {
 			while (adVFunds >= this.ns.corporation.getHireAdVertCost(this.divNames.restName) * this.ns.corporation.getCorporation().divisions.length || (offFunds >= this.ns.corporation.getOfficeSizeUpgradeCost(this.divNames.restName, this.cities[0], 3) * 6 * this.ns.corporation.getCorporation().divisions.length)) {
 				for (const division of this.ns.corporation.getCorporation().divisions) {
-					if (adVFunds > this.ns.corporation.getHireAdVertCost(division)) { 
+					if (adVFunds > this.ns.corporation.getHireAdVertCost(division)) {
 						adVFunds -= this.ns.corporation.getHireAdVertCost(division);
-						this.ns.corporation.hireAdVert(division); 
-						}
+						this.ns.corporation.hireAdVert(division);
+					}
 					for (const city of this.cities) {
 						if (offFunds > this.ns.corporation.getOfficeSizeUpgradeCost(division, city, 3)) {
 							offFunds -= this.ns.corporation.getOfficeSizeUpgradeCost(division, city, 3);
 							this.ns.corporation.upgradeOfficeSize(division, city, 3);
 							while (this.ns.corporation.hireEmployee(division, city, "Business")) { }
 						}
-						if (wareFunds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) { 
+						if (wareFunds > this.ns.corporation.getUpgradeWarehouseCost(division, city)) {
 							wareFunds -= this.ns.corporation.getUpgradeWarehouseCost(division, city);
-							this.ns.corporation.upgradeWarehouse(division, city); 
-							}
+							this.ns.corporation.upgradeWarehouse(division, city);
+						}
 					}
 				}
 				await this.ns.sleep(0);
@@ -530,9 +530,8 @@ export class Business {
 				}
 				let y = Math.max(this.ns.corporation.getOffice(division, prodCity).size, this.ns.corporation.getOffice(division, supportCities[0]).size, this.ns.corporation.getOffice(division, supportCities[1]).size, this.ns.corporation.getOffice(division, supportCities[2]).size, this.ns.corporation.getOffice(division, supportCities[3]).size, this.ns.corporation.getOffice(division, supportCities[4]).size);
 				if (!supportExps.every((number) => number === supportExps[0])) {
-					this.ns.print("found inbalance in supportExps for " + division + ". Correcting. goal is " + y);
 					while (!supportExps.every((number) => number === supportExps[0])) {
-						if (funds < supportExpCost) { this.ns.print("not enough funds to correct. awaiting funds"); return; }
+						if (funds < supportExpCost) { return; }
 						for (const city of supportCities) {
 							while (this.ns.corporation.getOffice(division, city).numEmployees < y) {
 								this.ns.corporation.upgradeOfficeSize(division, city, 3);
@@ -550,7 +549,6 @@ export class Business {
 					}
 				}
 				while (this.ns.corporation.getOffice(division, prodCity).size < this.ns.corporation.getOffice(division, supportCities[0]).size + 30) {
-					this.ns.print(prodCity + " is not 30 employees ahead of the other cities. correcting. goal is " + (this.ns.corporation.getOffice(division, supportCities[0]) + 30));
 					this.ns.corporation.upgradeOfficeSize(division, prodCity, 3);
 					while (this.ns.corporation.hireEmployee(division, prodCity)) { await this.ns.sleep(0); }
 					funds = this.ns.corporation.getCorporation().funds * 0.5;
@@ -558,13 +556,10 @@ export class Business {
 				}
 				let z = Math.max(this.ns.corporation.getWarehouse(division, prodCity).level, this.ns.corporation.getWarehouse(division, supportCities[0]).level, this.ns.corporation.getWarehouse(division, supportCities[1]).level, this.ns.corporation.getWarehouse(division, supportCities[2]).level, this.ns.corporation.getWarehouse(division, supportCities[3]).level, this.ns.corporation.getWarehouse(division, supportCities[4]).level);
 				while (!supportWHs.every((number) => number === supportWHs[0])) {
-					this.ns.print("found inbalance in supportWHs. correcting. goal is " + z);
-					this.ns.print("supportWHs: " + supportWHs);
 					if (funds < supportWHCost) { return; }
 					for (const city of supportCities) {
 						while (this.ns.corporation.getWarehouse(division, city).level < z) {
 							this.ns.corporation.upgradeWarehouse(division, city);
-							this.ns.print("upgrading " + city + " warehouse in " + division);
 							funds = this.ns.corporation.getCorporation().funds * 0.5;
 							await this.ns.sleep(0);
 						}
@@ -594,14 +589,12 @@ export class Business {
 							if (officeExpCost < supportExpCost) {
 								this.ns.corporation.upgradeOfficeSize(division, prodCity, 3);
 								while (this.ns.corporation.hireEmployee(division, prodCity)) { await this.ns.sleep(0); }
-								this.ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
 								funds = this.ns.corporation.getCorporation().funds * 0.5;
 							}
 							else {
 								for (const city of supportCities) {
 									this.ns.corporation.upgradeOfficeSize(division, city, 3);
 									while (this.ns.corporation.hireEmployee(division, city)) { }
-									this.ns.print("upgraded " + city + " office capacity in " + division);
 									funds = this.ns.corporation.getCorporation().funds * 0.5;
 								}
 							}
@@ -615,14 +608,12 @@ export class Business {
 						if (officeExpCost < supportExpCost) {
 							this.ns.corporation.upgradeOfficeSize(division, prodCity, 3);
 							while (this.ns.corporation.hireEmployee(division, prodCity)) { await this.ns.sleep(0); }
-							this.ns.print("upgraded " + prodCity + " Office capacity in " + division + " (prodCity)");
 							funds = this.ns.corporation.getCorporation().funds * 0.5;
 						}
 						else {
 							for (const city of supportCities) {
 								this.ns.corporation.upgradeOfficeSize(division, city, 3);
 								while (this.ns.corporation.hireEmployee(division, city)) { }
-								this.ns.print("upgraded " + city + " office capacity in " + division);
 								funds = this.ns.corporation.getCorporation().funds * 0.5;
 							}
 						}
@@ -630,7 +621,6 @@ export class Business {
 					await this.ns.sleep(0);
 				}
 				while ((funds * 0.01) / divisions.length >= this.ns.corporation.getUpgradeWarehouseCost(division, supportCities[0]) * 6) {
-					this.ns.print("upgrading warehouses in " + division);
 					this.ns.corporation.upgradeWarehouse(division, prodCity);
 					for (const city of supportCities) {
 						this.ns.corporation.upgradeWarehouse(division, city);
@@ -653,9 +643,7 @@ export class Business {
 				}
 				let y = Math.max(this.ns.corporation.getOffice(division, this.cities[0]).size, this.ns.corporation.getOffice(division, this.cities[1]).size, this.ns.corporation.getOffice(division, this.cities[2]).size, this.ns.corporation.getOffice(division, this.cities[3]).size, this.ns.corporation.getOffice(division, this.cities[4]).size, this.ns.corporation.getOffice(division, this.cities[5]).size);
 				while (!officeExps.every((number) => number === officeExps[0])) {
-					this.ns.print("found inbalance in officeExps for " + division + ". Correcting");
-					this.ns.print("officeExps: " + officeExps);
-					if (funds < officeExpCost) { this.ns.print("not enough funds to correct. awaiting income."); return; }
+					if (funds < officeExpCost) { return; }
 					for (const city of this.cities) {
 						while (this.ns.corporation.getOffice(division, city).numEmployees < y) {
 							this.ns.corporation.upgradeOfficeSize(division, city, 3);
@@ -678,9 +666,7 @@ export class Business {
 				}
 				let z = this.ns.corporation.getWarehouse(division, this.cities[0]).level;
 				while (!warehouseUps.every((number) => number === warehouseUps[0])) {
-					this.ns.print("found inbalance in warehouseUps for " + division + ". Correcting");
-					this.ns.print("warehouseUps: " + warehouseUps);
-					if (funds < warehouseUps) { this.ns.print("not enough funds to correct. awaiting income."); return; }
+					if (funds < warehouseUps) { return; }
 					for (const city of this.cities) {
 						while (this.ns.corporation.getWarehouse(division, city).level < z) {
 							this.ns.corporation.upgradeWarehouse(division, city);
@@ -699,7 +685,6 @@ export class Business {
 					await this.ns.sleep(0);
 				}
 				if ((funds * 0.8) / (divisions.length) >= officeExpCost) {
-					this.ns.print("upgrading Office Sizes for all cities in " + division);
 					for (const city of this.cities) {
 						this.ns.corporation.upgradeOfficeSize(division, city, 3);
 						while (this.ns.corporation.hireEmployee(division, city)) { await this.ns.sleep(0); }
@@ -708,7 +693,6 @@ export class Business {
 					await this.ns.sleep(0);
 				}
 				if ((funds * 0.2) / (divisions.length) >= warehouseCost) {
-					this.ns.print("upgrading warehouses for all cities in " + division);
 					for (const city of this.cities) {
 						this.ns.corporation.upgradeWarehouse(division, city);
 					}
@@ -776,21 +760,21 @@ export class Business {
 		const rdNames = ["Hi-Tech R&D Laboratory", "Market-TA.I", "Market-TA.II", "Automatic Drug Administration", "Go-Juice", "Overclock", "Sti.mu", "CPH4 Injections", "Drones", "Drones - Assembly", "Drones - Transport", "Self-Correcting Assemblers", "AutoBrew", "AutoPartyManager"];
 		const prodrdNames = ["uPgrade: Fulcrum", "uPgrade: Capacity.I", "uPgrade: Dashboard"];
 		for (const division of this.ns.corporation.getCorporation().divisions) {
-			if (this.ns.corporation.getDivision(division).researchPoints > 12000 && !this.ns.corporation.hasResearched(division, rdNames[0])) { this.ns.print("purchasing research: " + rdNames[0] + " in " + division); this.ns.corporation.research(division, rdNames[0]); }
+			if (this.ns.corporation.getDivision(division).researchPoints > 12000 && !this.ns.corporation.hasResearched(division, rdNames[0])) { this.ns.corporation.research(division, rdNames[0]); }
 			if (!this.ns.corporation.hasResearched(division, rdNames[0])) { continue; }
-			if (this.ns.corporation.getDivision(division).researchPoints > 1.4e5 && !this.ns.corporation.hasResearched(division, rdNames[2])) { this.ns.print("purchasing research: " + rdNames[2] + " in " + division); this.ns.corporation.research(division, rdNames[1]); this.ns.corporation.research(division, rdNames[2]); }
+			if (this.ns.corporation.getDivision(division).researchPoints > 1.4e5 && !this.ns.corporation.hasResearched(division, rdNames[2])) { this.ns.corporation.research(division, rdNames[1]); this.ns.corporation.research(division, rdNames[2]); }
 			if (!this.ns.corporation.hasResearched(division, rdNames[2])) { continue; }
-			if (this.ns.corporation.getDivision(division).researchPoints > 1.5e5 && !this.ns.corporation.hasResearched(division, rdNames[4])) { this.ns.print("purchasing research: " + rdNames[4] + " in " + division); this.ns.corporation.research(division, rdNames[3]); this.ns.corporation.research(division, rdNames[4]); }
+			if (this.ns.corporation.getDivision(division).researchPoints > 1.5e5 && !this.ns.corporation.hasResearched(division, rdNames[4])) { this.ns.corporation.research(division, rdNames[3]); this.ns.corporation.research(division, rdNames[4]); }
 			if (!this.ns.corporation.hasResearched(division, rdNames[4])) { continue; }
-			if (this.ns.corporation.getDivision(division).researchPoints > 1.5e5 && !this.ns.corporation.hasResearched(division, rdNames[6])) { this.ns.print("purchasing research: " + rdNames[6] + " in " + division); this.ns.corporation.research(division, rdNames[5]); this.ns.corporation.research(division, rdNames[6]); }
+			if (this.ns.corporation.getDivision(division).researchPoints > 1.5e5 && !this.ns.corporation.hasResearched(division, rdNames[6])) { this.ns.corporation.research(division, rdNames[5]); this.ns.corporation.research(division, rdNames[6]); }
 			if (!this.ns.corporation.hasResearched(division, rdNames[6])) { continue; }
-			if (this.ns.corporation.getDivision(division).researchPoints > 1e5 && !this.ns.corporation.hasResearched(division, rdNames[7])) { this.ns.print("purchasing research: " + rdNames[7] + " in " + division); this.ns.corporation.research(division, rdNames[7]); }
+			if (this.ns.corporation.getDivision(division).researchPoints > 1e5 && !this.ns.corporation.hasResearched(division, rdNames[7])) { this.ns.corporation.research(division, rdNames[7]); }
 			for (const name of rdNames) {
-				if (this.ns.corporation.getDivision(division).researchPoints >= this.ns.corporation.getResearchCost(division, name) * 30 && !this.ns.corporation.hasResearched(division, name)) { this.ns.print("purchasing research: " + name + " in " + division); this.ns.corporation.research(division, name); }
+				if (this.ns.corporation.getDivision(division).researchPoints >= this.ns.corporation.getResearchCost(division, name) * 30 && !this.ns.corporation.hasResearched(division, name)) { this.ns.corporation.research(division, name); }
 			}
 			if (this.ns.corporation.getDivision(division).makesProducts) {
 				if (this.ns.corporation.getDivision(division).researchPoints >= (this.ns.corporation.getResearchCost(division, prodrdNames[0]) * 3.5) * 10) {
-					for (const name of prodrdNames) { this.ns.print("purchasing research: " + name + " in " + division); this.ns.corporation.research(division, name); }
+					for (const name of prodrdNames) { this.ns.corporation.research(division, name); }
 				}
 			}
 		}
@@ -975,7 +959,6 @@ export class Business {
 			if (products[0]?.developmentProgress < 100 || products[1]?.developmentProgress < 100 || products[2]?.developmentProgress < 100) { continue; }
 			if (products.length >= prodMax && this.ns.corporation.getProduct(divNames[i], this.cities[0], products[prodMax - 1]).developmentProgress >= 100) { this.ns.corporation.discontinueProduct(divNames[i], products[0]); }
 			this.ns.corporation.makeProduct(divNames[i], this.cities[0], (prodNames[i] + version), Math.abs(this.ns.corporation.getCorporation().funds * 0.01), Math.abs(this.ns.corporation.getCorporation().funds * 0.01));
-			this.ns.print("started new product in " + divNames[i] + ", product: " + (prodNames[i] + version) + " - funding: " + this.ns.formatNumber((Math.abs(this.ns.corporation.getCorporation().funds * 0.01) * 2), 3));
 		}
 	}
 
@@ -1010,8 +993,6 @@ export class Business {
 			augLevels.push(this.ns.corporation.getUpgradeLevel(this.lvlUps[i]));
 		}
 		while (!augLevels.every((number) => number === augLevels[0])) {
-			this.ns.print("employee augment upgrades imbalanced. correcting");
-			this.ns.print("augLevels: " + augLevels);
 			await this.ns.sleep(0);
 			while (this.ns.corporation.getUpgradeLevel(this.lvlUps[2]) < this.ns.corporation.getUpgradeLevel(this.lvlUps[3]) || this.ns.corporation.getUpgradeLevel(this.lvlUps[2]) < this.ns.corporation.getUpgradeLevel(this.lvlUps[4]) || this.ns.corporation.getUpgradeLevel(this.lvlUps[2]) < this.ns.corporation.getUpgradeLevel(this.lvlUps[5])) {
 				this.ns.corporation.levelUpgrade(this.lvlUps[2]);
@@ -1036,13 +1017,12 @@ export class Business {
 			await this.ns.sleep(0);
 		}
 		const employeeUpCost = this.ns.corporation.getUpgradeLevelCost(this.lvlUps[2]) + this.ns.corporation.getUpgradeLevelCost(this.lvlUps[3]) + this.ns.corporation.getUpgradeLevelCost(this.lvlUps[4]) + this.ns.corporation.getUpgradeLevelCost(this.lvlUps[5]);
-		if (upgradeFunds > wilsonCost) { this.ns.print("buying " + this.lvlUps[6] + " upgrade"); this.ns.corporation.levelUpgrade(this.lvlUps[6]); return; }
+		if (upgradeFunds > wilsonCost) { this.ns.corporation.levelUpgrade(this.lvlUps[6]); return; }
 		if (upgradeFunds < employeeUpCost) { return; }
-		if (employeeUpCost / 2 > labCost) { this.ns.print("buying " + this.lvlUps[7] + " upgrade"); this.ns.corporation.levelUpgrade(this.lvlUps[7]); return; }
-		if (employeeUpCost > factCost) { this.ns.print("buying " + this.lvlUps[0] + " and " + this.lvlUps[1] + "upgrades"); this.ns.corporation.levelUpgrade(this.lvlUps[0]); this.ns.corporation.levelUpgrade(this.lvlUps[1]); return; }
-		if (upgradeFunds > abcCost) { this.ns.print("buying " + this.lvlUps[8] + " upgrade"); this.ns.corporation.levelUpgrade(this.lvlUps[8]); return; }
+		if (employeeUpCost / 2 > labCost) { this.ns.corporation.levelUpgrade(this.lvlUps[7]); return; }
+		if (employeeUpCost > factCost) { this.ns.corporation.levelUpgrade(this.lvlUps[0]); this.ns.corporation.levelUpgrade(this.lvlUps[1]); return; }
+		if (upgradeFunds > abcCost) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); return; }
 		if (upgradeFunds * 0.5 > this.ns.corporation.getUpgradeLevelCost(this.lvlUps[9])) { this.ns.print("buying " + this.lvlUps[9] + " upgrade"); this.ns.corporation.levelUpgrade(this.lvlUps[9]); return; }
-		this.ns.print("buying employee augment upgrades");
 		for (let i = 2; i < 6; i++) {
 			this.ns.corporation.levelUpgrade(this.lvlUps[i]);
 		}
@@ -1182,6 +1162,7 @@ export class Business {
 	//function to make the log pretty
 	logPrint() {
 		this.ns.resizeTail(350, 300);
+		this.ns.moveTail(850, 380);
 		this.ns.clearLog();
 		this.ns.print("Corporation: " + this.ns.corporation.getCorporation().name);
 		this.ns.print("Divisions: " + this.ns.corporation.getCorporation().divisions.length);
