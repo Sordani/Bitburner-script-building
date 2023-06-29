@@ -584,7 +584,7 @@ export class Business {
 				}
 				if ((division == "CamelCorp")) {
 					if (tobaccoFunds >= advertCost || tobaccoFunds >= officeExpCost) {
-						if (officeExpCost > advertCost) { this.ns.corporation.hireAdVert(division); this.ns.print("AdVert bought in " + division); }
+						if (officeExpCost > advertCost) { this.ns.corporation.hireAdVert(division); }
 						if (officeExpCost < advertCost) {
 							if (officeExpCost < supportExpCost) {
 								this.ns.corporation.upgradeOfficeSize(division, prodCity, 3);
@@ -603,7 +603,7 @@ export class Business {
 					}
 				}
 				if ((funds * 0.8) / divisions.length >= advertCost || (funds * 0.8) / divisions.length >= officeExpCost) {
-					if (officeExpCost > advertCost) { this.ns.corporation.hireAdVert(division); this.ns.print("AdVert bought in " + division); }
+					if (officeExpCost > advertCost) { this.ns.corporation.hireAdVert(division); }
 					if (officeExpCost < advertCost) {
 						if (officeExpCost < supportExpCost) {
 							this.ns.corporation.upgradeOfficeSize(division, prodCity, 3);
@@ -1022,7 +1022,7 @@ export class Business {
 		if (employeeUpCost / 2 > labCost) { this.ns.corporation.levelUpgrade(this.lvlUps[7]); return; }
 		if (employeeUpCost > factCost) { this.ns.corporation.levelUpgrade(this.lvlUps[0]); this.ns.corporation.levelUpgrade(this.lvlUps[1]); return; }
 		if (upgradeFunds > abcCost) { this.ns.corporation.levelUpgrade(this.lvlUps[8]); return; }
-		if (upgradeFunds * 0.5 > this.ns.corporation.getUpgradeLevelCost(this.lvlUps[9])) { this.ns.print("buying " + this.lvlUps[9] + " upgrade"); this.ns.corporation.levelUpgrade(this.lvlUps[9]); return; }
+		if (upgradeFunds * 0.5 > this.ns.corporation.getUpgradeLevelCost(this.lvlUps[9])) { this.ns.corporation.levelUpgrade(this.lvlUps[9]); return; }
 		for (let i = 2; i < 6; i++) {
 			this.ns.corporation.levelUpgrade(this.lvlUps[i]);
 		}
