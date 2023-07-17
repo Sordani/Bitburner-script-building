@@ -49,7 +49,7 @@ export function warHandler(ns) {
 
 /** @param {NS} ns */
 export async function warZone(ns) {
-	const gangData = ns.gang.getGangInformation();
+	let gangData = ns.gang.getGangInformation();
 	while (gangData.territoryWarfareEngaged && gangData.territory < 1) {
 		gangData = ns.gang.getGangInformation();
 		for (const member of ns.gang.getMemberNames()) {
