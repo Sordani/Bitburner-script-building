@@ -39,7 +39,7 @@ export function taskManager(ns) {
 export function warHandler(ns) {
 	const gangData = ns.gang.getGangInformation(), otherGangsData = ns.gang.getOtherGangInformation(), members = ns.gang.getMemberNames();
 	let warBool = true;
-	if (members.length < 12) { warBool = false; }
+	if (members.length < 8) { warBool = false; }
 	for(const [name,gang] of Object.entries(ns.gang.getOtherGangInformation())) { //thank jakob for this
 		if (name == gangData.faction) { continue; }
 		if (ns.gang.getChanceToWinClash(name) < 0.55) { warBool = false; }
