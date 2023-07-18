@@ -8,7 +8,6 @@ export class MobBoss {
 	mobFaction
 	mobInfo
 	names
-	enemyMobs
 	clashDefThresh
 	clashBool
 	qmInfo
@@ -17,7 +16,15 @@ export class MobBoss {
 		/**@type {NS} */
 		this.ns = ns;
 		this.startTime = Date.now();
-		this.tick = { foundBool: false, bool: false, timer: 18000, countdown: undefined, increment: 0 };
+		this.tick = {
+			foundBool: false,
+			bool: false,
+			enemyMobBool: true,
+			enemyMobData: undefined,
+			timer: 18000,
+			countdown: undefined,
+			increment: 0
+		};
 		this.m = ns.gang;
 		this.warBool = true;
 		this.mobFaction = "Slum Snakes";
@@ -36,7 +43,6 @@ export class MobBoss {
 			"Karris Whiteoak",
 			"Sevastian"
 		];
-		this.enemyMobs = { bool: true, data: undefined };
 		this.clashDefThresh = 600; //minimum defense required to territory warfare if clashing
 		this.clashBool = false;
 		this.qmInfo = { buyBool: true, cycleThresh: 3, cycles: 0, tickSnapShot: 0 };
@@ -49,10 +55,10 @@ export class MobBoss {
 
 	mobCommand() {
 		this.startMob();
-		if (this.enemyMobs.bool) { this.enemyMobs.data = this.ns.gang.getOtherGangInformation(); this.enemyMobs.bool = false; }
 		this.mobRecruiter();
+		if (this.tick.enemyMobBool) { this.tick.enemyMobBool = false; this.tick.enemyMobData = this.m.getOtherGangInformation(); }
 		this.mobInfo = this.m.getGangInformation();
-		this.tickTracker();
+		this.enemyMobMonitor();
 		this.taskManager();
 		this.mobQuartermaster();
 		this.mobPromotion();
@@ -61,20 +67,21 @@ export class MobBoss {
 	}
 
 	//keeps track of when the special moment of recalculating otherGang power is.
-	tickTracker() {
+	enemyMobMonitor() {
 		if (this.tick.foundBool) { //happens after we find the tick the first ime.
 			if (this.tick.bool) {
-				if (this.enemyMobs.data == this.m.getOtherGangInformation()) { return; }
-				this.enemyMobs.data = this.m.getOtherGangInformation();
+				if (JSON.stringify(this.tick.enemyMobData) == JSON.stringify(this.m.getOtherGangInformation())) { return; }
+				this.tick.enemyMobData = this.m.getOtherGangInformation();
 				this.tick.bool = false;
 				this.tick.countdown = Date.now() + this.tick.timer;
 				this.tick.increment++
-			}
-			if (Date.now() >= this.tick.countdown) {
-				this.tick.bool = true;
+			} else {
+				if (Date.now() + 2000 >= this.tick.countdown) {
+					this.tick.bool = true;
+				}
 			}
 		} else { //looking for the tick and setting the timer the first time.
-			if (this.enemyMobs.data != this.ns.gang.getOtherGangInformation()) {
+			if (JSON.stringify(this.tick.enemyMobData) != JSON.stringify(this.m.getOtherGangInformation())) {
 				this.tick.foundBool = true;
 				this.tick.countdown = Date.now() + this.tick.timer;
 			}
@@ -235,14 +242,12 @@ export class MobBoss {
 		this.ns.clearLog();
 		this.ns.print("runTime:");
 		this.ns.print(this.ns.tFormat(Date.now() - this.startTime));
-		this.ns.print("money generated:");
+		this.ns.print("gang money generated:");
 		this.ns.print(this.ns.formatNumber(this.ns.getMoneySources().sinceStart.gang));
 		this.ns.print("tick object:");
 		this.ns.print(JSON.stringify(this.tick));
 		this.ns.print("warBool:");
 		this.ns.print(this.warBool);
-		this.ns.print("enemyMobs:");
-		this.ns.print(JSON.stringify(this.enemyMobs));
 	}
 }
 
