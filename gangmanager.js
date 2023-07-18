@@ -17,7 +17,7 @@ export class MobBoss {
 		/**@type {NS} */
 		this.ns = ns;
 		this.startTime = Date.now();
-		this.tick = { foundBool: false, bool: false, otherMobsCycle: undefined, timer: 18000, countdown: undefined, increment: 0 };
+		this.tick = { foundBool: false, bool: false, timer: 18000, countdown: undefined, increment: 0 };
 		this.m = ns.gang;
 		this.warBool = true;
 		this.mobFaction = "Slum Snakes";
