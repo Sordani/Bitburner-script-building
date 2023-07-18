@@ -19,7 +19,7 @@ export class MobBoss {
 		this.m = ns.gang;
 		this.warBool = true;
 		this.mobFaction = "Slum Snakes";
-		this.mobInfo = this.m.getGangInformation();
+		this.mobInfo;
 		this.names = [ //Black Prism Characters, the Mighty
 			"Kip Guile",
 			"Cruxor",
@@ -34,7 +34,7 @@ export class MobBoss {
 			"Karris Whiteoak",
 			"Sevastian"
 		];
-		this.enemyMobs = this.m.getOtherGangInformation();
+		this.enemyMobs;
 		this.clashDefThresh = 600; //minimum defense required to territory warfare if clashing
 		this.clashBool = false;
 		this.qmInfo = { buyBool: true, cycleThresh: 3, cycles: 0, tickSnapShot: 0 };
@@ -49,6 +49,7 @@ export class MobBoss {
 		this.startMob();
 		this.mobRecruiter();
 		this.mobInfo = this.m.getGangInformation();
+		this.enemyMobs = this.m.getOtherGangInformation();
 		this.tickTracker();
 		this.taskManager();
 		this.mobQuartermaster();
