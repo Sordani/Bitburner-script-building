@@ -2,6 +2,7 @@
 export class MobBoss {
 	/**@type {NS} */
 	ns
+	startTime
 	tick
 	m
 	mobFaction
@@ -15,7 +16,8 @@ export class MobBoss {
 	constructor(ns) {
 		/**@type {NS} */
 		this.ns = ns;
-		this.tick = { bool: false, otherMobsCycle: undefined, timer: 19500, countdown: undefined, increment: 0 };
+		this.startTime = Date.now();
+		this.tick = { foundBool: false, bool: false, otherMobsCycle: undefined, timer: 18000, countdown: undefined, increment: 0 };
 		this.m = ns.gang;
 		this.warBool = true;
 		this.mobFaction = "Slum Snakes";
@@ -34,7 +36,7 @@ export class MobBoss {
 			"Karris Whiteoak",
 			"Sevastian"
 		];
-		this.enemyMobs;
+		this.enemyMobs = { bool: true, data: undefined };
 		this.clashDefThresh = 600; //minimum defense required to territory warfare if clashing
 		this.clashBool = false;
 		this.qmInfo = { buyBool: true, cycleThresh: 3, cycles: 0, tickSnapShot: 0 };
@@ -47,34 +49,42 @@ export class MobBoss {
 
 	mobCommand() {
 		this.startMob();
+		if (this.enemyMobs.bool) { this.enemyMobs.data = this.ns.gang.getOtherGangInformation(); this.enemyMobs.bool = false; }
 		this.mobRecruiter();
 		this.mobInfo = this.m.getGangInformation();
-		this.enemyMobs = this.m.getOtherGangInformation();
 		this.tickTracker();
 		this.taskManager();
 		this.mobQuartermaster();
 		this.mobPromotion();
 		this.mobWarHandler();
+		this.mobPrint();
 	}
 
 	//keeps track of when the special moment of recalculating otherGang power is.
 	tickTracker() {
-		if (this.tick.bool) {
-			if (this.enemyMobs === this.m.getOtherGangInformation()) { return; }
-			this.enemyMobs = this.m.getOtherGangInformation();
-			this.tick.bool = false;
-			this.tick.countdown = Date.now() + this.tick.timer;
-		}
-		if (Date.now() >= this.tick.countdown) {
-			this.tick.bool = true;
-			this.tick.increment++;
+		if (this.tick.foundBool) { //happens after we find the tick the first ime.
+			if (this.tick.bool) {
+				if (this.enemyMobs.data == this.m.getOtherGangInformation()) { return; }
+				this.enemyMobs.data = this.m.getOtherGangInformation();
+				this.tick.bool = false;
+				this.tick.countdown = Date.now() + this.tick.timer;
+				this.tick.increment++
+			}
+			if (Date.now() >= this.tick.countdown) {
+				this.tick.bool = true;
+			}
+		} else { //looking for the tick and setting the timer the first time.
+			if (this.enemyMobs.data != this.ns.gang.getOtherGangInformation()) {
+				this.tick.foundBool = true;
+				this.tick.countdown = Date.now() + this.tick.timer;
+			}
 		}
 	}
 
 	//assigns tasks to gangmembers
 	taskManager() {
 		if (this.tick.bool) {
-			for (const member of this.m.getMemberNames) {
+			for (const member of this.m.getMemberNames()) {
 				if (this.m.getMemberInformation(member).def < this.clashDefThresh && this.clashBool) continue;
 				this.m.setMemberTask(member, "Territory Warfare");
 			}
@@ -218,6 +228,21 @@ export class MobBoss {
 		}
 		this.ns.gang.setTerritoryWarfare(this.warBool && this.mobInfo.territory < 1);
 		this.clashBool = (this.warBool && this.mobInfo.territory < 1);
+	}
+
+	//logmanager
+	mobPrint() {
+		this.ns.clearLog();
+		this.ns.print("runTime:");
+		this.ns.print(this.ns.tFormat(Date.now() - this.startTime));
+		this.ns.print("money generated:");
+		this.ns.print(this.ns.formatNumber(this.ns.getMoneySources().sinceStart.gang));
+		this.ns.print("tick object:");
+		this.ns.print(JSON.stringify(this.tick));
+		this.ns.print("warBool:");
+		this.ns.print(this.warBool);
+		this.ns.print("enemyMobs:");
+		this.ns.print(JSON.stringify(this.enemyMobs));
 	}
 }
 
