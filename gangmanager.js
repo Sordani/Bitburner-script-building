@@ -21,7 +21,7 @@ export class MobBoss {
 			bool: false,
 			enemyMobBool: true,
 			enemyMobData: undefined,
-			timer: 18000,
+			timer: 19000,
 			countdown: undefined,
 			increment: 0
 		};
@@ -51,6 +51,7 @@ export class MobBoss {
 
 	startMob() {
 		if (!this.m.inGang() && this.ns.getPlayer().factions.includes(this.mobFaction)) { this.m.createGang(this.mobFaction); }
+		if (!this.m.inGang()) { this.ns.exit(); }
 	}
 
 	mobCommand() {
@@ -76,7 +77,7 @@ export class MobBoss {
 				this.tick.countdown = Date.now() + this.tick.timer;
 				this.tick.increment++
 			} else {
-				if (Date.now() + 2000 >= this.tick.countdown) {
+				if (Date.now() + 1000 >= this.tick.countdown) {
 					this.tick.bool = true;
 				}
 			}
@@ -142,6 +143,7 @@ export class MobBoss {
 	mobQuartermaster() {
 		const money = this.ns.getPlayer().money;
 		const nextPurchase = this.mobWishList();
+		if (money < 1e15) {
 		if (nextPurchase.length === 0) { return; }
 		if (this.m.getEquipmentCost(nextPurchase[0]) > money) {
 			this.qmInfo.bool = false;
@@ -156,6 +158,14 @@ export class MobBoss {
 		}
 		if (!this.qmInfo.bool) { return; }
 		this.m.purchaseEquipment(nextPurchase[1], nextPurchase[0]);
+		} else {
+			for (const member of this.m.getMemberNames()) {
+				for (const equip of this.m.getEquipmentNames()) {
+					if (this.m.getMemberInformation(member).upgrades.includes(equip)) { continue; }
+					this.m.purchaseEquipment(member, equip);
+				}
+			}
+		}
 	}
 
 	//returns an array [equipmentName, gangMemberName] for next cheapest purchase 
@@ -239,15 +249,21 @@ export class MobBoss {
 
 	//logmanager
 	mobPrint() {
+		this.ns.resizeTail(300, 300);
+		this.ns.moveTail(700, 80);
 		this.ns.clearLog();
-		this.ns.print("runTime:");
-		this.ns.print(this.ns.tFormat(Date.now() - this.startTime));
-		this.ns.print("gang money generated:");
-		this.ns.print(this.ns.formatNumber(this.ns.getMoneySources().sinceStart.gang));
-		this.ns.print("tick object:");
-		this.ns.print(JSON.stringify(this.tick));
-		this.ns.print("warBool:");
-		this.ns.print(this.warBool);
+		this.ns.print("Faction Name: " + this.mobInfo.faction);
+		this.ns.print("Faction Rep: " + this.ns.formatNumber(this.ns.singularity.getFactionRep(this.mobInfo.faction), 3, 1000, true));
+		this.ns.print("Total Respect: " + this.ns.formatNumber(this.mobInfo.respect, 3, 1000, true));
+		this.ns.print("Mob Size: " + this.m.getMemberNames().length);
+		if (this.m.getMemberNames().length < 12) { this.ns.print("New Member Respect: " + Math.pow(5, (this.m.getMemberNames().length - 2))); }
+		this.ns.print("Mob Power: " + this.ns.formatNumber(this.mobInfo.power, 3, 1000, true));
+		this.ns.print("At War?: " + this.warBool);
+		this.ns.print("Territory Power: " + this.ns.formatNumber(this.mobInfo.power, 3, 1000, true));
+		this.ns.print("Territory Owned: " + this.ns.formatPercent(this.mobInfo.territory));
+		this.ns.print("Mob cashflow: " + this.ns.formatNumber(this.ns.getMoneySources().sinceInstall.gang));
+		this.ns.print("Mob L/T Cash: " + this.ns.formatNumber(this.ns.getMoneySources().sinceStart.gang));
+		this.ns.print("Run Time: " + this.ns.tFormat(Date.now() - this.startTime));
 	}
 }
 
