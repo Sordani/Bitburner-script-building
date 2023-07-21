@@ -419,7 +419,7 @@ export class Business {
 	async enronFraudPrep() {
 		const funds = this.ns.corporation.getCorporation().funds;
 		let upFunds = funds * 0.1;
-		let wilFunds = funds * 0.2;
+		let wilFunds = funds * 0.1;
 		let abcFunds = funds * 0.1;
 		let adVFunds = funds * 0.2;
 		let offFunds = funds * 0.2;
