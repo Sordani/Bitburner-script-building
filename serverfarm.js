@@ -1,19 +1,4 @@
-async function purchasePServ(ns, virus) {
-	const startRam = 8;
-	let numOfPServs = updatePServRams(ns).length;
-	let i = numOfPServs;
-	while (numOfPServs < ns.getPurchasedServerLimit()) {
-		await ns.sleep(10000);
-		let money = ns.getServerMoneyAvailable('home');
-		if (money < ns.getPurchasedServerCost(startRam)) continue;
-		ns.purchaseServer('pserv-' + i, startRam);
-		ns.print('Purchased pserv-' + i + ' starting at 8 gbs');
-		ns.scp(virus, 'pserv-' + i);
-		numOfPServs = updatePServRams(ns).length;
-		i++
-	}
-}
-
+/** @param {NS} ns */
 function updatePServRams(ns) {
 	/*let pServList = [];
 	let scanList = ns.scan('home');
@@ -27,19 +12,31 @@ function updatePServRams(ns) {
 
 }
 
-function getSmallestRamPServer(ns, pServList) {
+/** @param {NS} ns */
+function getSmallestRamPServer(pServList) {
 	return pServList.sort((a, b) => a.ram - b.ram)[0];
 }
 
-function upgradePserv(ns, virus, pserver) {
-	ns.print('virus');
-	ns.print(virus);
-	ns.print('pserver');
-	ns.print(pserver);
-	ns.scriptKill(virus, pserver.name);
+/** @param {NS} ns */
+function upgradePserv(ns, pserver) {
+	ns.killall(pserver.name);
 	ns.upgradePurchasedServer(pserver.name, pserver.ram * 2);
-	ns.print('Upgraded ' + pserver.name + ' to ' + pserver.ram * 2 + ' gbs.');
-	ns.scp(virus, pserver.name);
+}
+
+/** @param {NS} ns */
+function printStuff(ns) {
+	ns.clearLog();
+	ns.resizeTail(200, 250);
+	ns.moveTail(1400, 600);
+	const pservers = updatePServRams(ns);
+	const smallestServer = getSmallestRamPServer(pservers)
+	const cost = ns.getPurchasedServerUpgradeCost(smallestServer.name, smallestServer.ram * 2);
+	ns.print("Server Count: " + pservers.length);
+	ns.print("Upgrade Target: " + smallestServer.name);
+	ns.print("ram from: " + smallestServer.ram);
+	ns.print("ram to: " + smallestServer.ram * 2);
+	ns.print("Cost: " + ns.formatNumber(cost, 3));
+
 }
 
 
@@ -47,25 +44,17 @@ function upgradePserv(ns, virus, pserver) {
 export async function main(ns) {
 	ns.disableLog("ALL");
 	ns.tail();
-	const virus = 'early-hack-template.js'
 	let pservList = updatePServRams(ns);
-	const pservLimit = ns.getPurchasedServerLimit();
 	const maxRam = ns.getPurchasedServerMaxRam();
-
-	if (pservList.length < pservLimit) {
-		await purchasePServ(ns, virus);
-	}
-
-	pservList = updatePServRams(ns);
-	let lowestRamServ = getSmallestRamPServer(ns, pservList);
+	let lowestRamServ = getSmallestRamPServer(pservList);
 
 	while (lowestRamServ.ram < maxRam) {
-		await ns.sleep(1000);
+		await ns.sleep(30);
 		let money = ns.getServerMoneyAvailable('home');
 		if (money < ns.getPurchasedServerUpgradeCost(lowestRamServ.name, lowestRamServ.ram * 2)) continue;
-		upgradePserv(ns, virus, lowestRamServ);
+		upgradePserv(ns, lowestRamServ);
 		pservList = updatePServRams(ns);
-		lowestRamServ = getSmallestRamPServer(ns, pservList);
-		ns.print('next server to upgrade is ' + lowestRamServ.name);
+		lowestRamServ = getSmallestRamPServer(pservList);
+		printStuff(ns);
 	}
 }
