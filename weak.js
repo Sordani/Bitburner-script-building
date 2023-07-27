@@ -14,6 +14,6 @@ export async function main(ns) {
 	// Weaken2 reports batch number instead of job.
 	ns.atExit(() => {
 		if (metrics.job === "weaken2") ns.writePort(metrics.port, metrics.batch);
-		ns.writePort(metrics.log, `Batch ${metrics.batch}: ${metrics.job} finished at ${end.toString().slice(-6)}/${Math.round(metrics.end).toString().slice(-6)}\n`);
+		if (!metrics.log === null) { ns.writePort(metrics.log, `Batch ${metrics.batch}: ${metrics.job} finished at ${end.toString().slice(-6)}/${Math.round(metrics.end).toString().slice(-6)}\n`); }
 	});
 }
