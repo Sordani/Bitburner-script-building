@@ -3,16 +3,19 @@ import { buildramNetwork, solveGrow, isPrepped, prepTarget, countPrograms, Weigh
 
 /** @param {NS} ns */
 export async function main(ns) {
-	//ns.disableLog("ALL");
+	ns.disableLog("ALL");
 	ns.tail();
-	ns.moveTail(1000, 200);
+	ns.moveTail(1000, 150);
+	ns.resizeTail(360, 230);
 	const dataPort = ns.getPortHandle(ns.pid);
 	dataPort.clear();
 
 	// Spawns a special helper script for centralizing worker logs. See the script itself for details.
 	if (ns.isRunning("batchlog.js", "home")) ns.scriptKill("batchlog.js", "home");
-	const logPort = ns.exec("batchlog.js", "home");
+	//const logPort = ns.exec("batchlog.js", "home");
+	const logPort = null;
 	ns.atExit(() => ns.closeTail(logPort));  // Kill the logger when the controller ends.
+	ns.atExit(() => ns.closeTail());
 	await ns.sleep(1000); // This is to give the helper a moment to initialize.
 
 	while (true) {//while loop starts here once we get this shotgun working
@@ -26,10 +29,10 @@ export async function main(ns) {
 			minBlockSize: Infinity,
 			spacer: 5,
 			buffer: 2000,
-			magazine: 100,
 			bestIncome: 0,
 			greed: 0,
 			depth: 0,
+			depthMax: 40000,
 			hThreads: 0,
 			gThreads: 0,
 			homegThreads: 0,
@@ -40,7 +43,8 @@ export async function main(ns) {
 			batchSize: 0,
 			homebatchSize: 0,
 			shells: 0,
-			shots: 0
+			shots: 0,
+			batchEnd: 0
 		}
 
 		buildramNetwork(ns, ramNetwork, values);
@@ -65,7 +69,7 @@ export async function main(ns) {
 		const times = { hack: hTime, weaken1: wTime, grow: gTime, weaken2: wTime };
 		const startTime = Date.now();
 		let batchCounter = 0;
-		let stopGap = 100; //used for spacing of batches later
+		let stopGap = 1000; //used for spacing of batches later
 		values.shots = values.depth;
 
 
@@ -104,15 +108,17 @@ export async function main(ns) {
 			//sends 100 batches, waits 1000 milliseconds. this is to combat larger ram situations
 			//that cause the game to grind to a halt when you want to exec 2 million scripts.
 			if (batchCounter >= stopGap) {
-				stopGap += 100;
+				stopGap += 1000;
 				await ns.sleep(1000);
 			}
 			
+			values.batchEnd = wEnd2;
 			values.shots--;
 		}
 
 
 		do {
+			if (values.batchEnd == null) { values.batchEnd = 0; }
 			const runTime = Date.now() - startTime;
 			ns.clearLog();
 			ns.print(`Target: ${values.optimalTarget}`);
@@ -121,8 +127,12 @@ export async function main(ns) {
 			ns.print(`RAM allocated: ${values.hThreads * 1.7 + (values.wThreads1 + values.wThreads2 + values.gThreads) * 1.75 * batchCounter}/${values.totalThreads * 1.75} GBs`);
 			ns.print(`Expected yield: \$${ns.formatNumber(batchCounter * (ns.hackAnalyze(values.optimalTarget) * values.hThreads) * server.moneyMax * (60000 / (values.spacer * 4 * batchCounter + wTime + values.buffer)), 2)} per minute`);
 			ns.print(`Runtime: ${ns.tFormat(runTime, true)}`);
+			ns.print(`Batch Ending in: ${ns.tFormat((values.batchEnd) - Date.now())}`);
 			
+			let triggered = false;
+			setTimeout(() => triggered? null: dataPort.write(batchCounter - 1), values.batchEnd + 2000)
 			await dataPort.nextWrite();
+			triggered = true;
 		} while (dataPort.read() !== batchCounter - 1);
 
 	} //while true wraparound to the whole thing once it's working
