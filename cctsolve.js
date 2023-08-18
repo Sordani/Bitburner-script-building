@@ -18,6 +18,44 @@ export function largestPrimeFactor(number) {
 	return divisor;
 }
 
+export function contiguousArraySum(array) {
+    let maxSum = 0;
+    let currentSum = 0;
+    for (let i = 0; i < array.length; i++) {
+        currentSum += array[i];
+        if (maxSum < currentSum) { maxSum = currentSum; }
+        if (currentSum < 0) { currentSum = 0; }
+    }
+    return maxSum;
+}
+
+export function totalWaysToSum(number) {
+    const ways = [1];
+    ways.length = number + 1;
+    ways.fill(0, 1);
+    for (let i = 1; i < number; ++i) {
+        for (let j = i; j <= number; ++j) {
+            ways[j] += ways[j - i];
+        }
+    }
+
+    return ways[number];
+}
+
+export function totalWaysToSumII(data) {
+    const number = data[0];
+    const series = data[1];
+    const ways = [1];
+    ways.length = number + 1;
+    ways.fill(0, 1);
+    for (let i = 0; i < series.length; i++) {
+        for (let j = series[i]; j <= number; j++) {
+            ways[j] += ways[j - series[i]];
+        }
+    }
+    return ways[number];
+}
+
 /** @param {NS} ns */
 export async function main(ns) {
 	ns.tail();
@@ -29,10 +67,10 @@ export async function main(ns) {
 	const number = ns.codingcontract.getData(filename, host);
 	let answer = undefined;
 	const solver = {
-		"Find Largest Prime Factor": largestPrimeFactor(number),
-		"Subarray with Maximum Sum": null,
-		"Total Ways to Sum": null,
-		"Total Ways to Sum II": null,
+		"Find Largest Prime Factor": largestPrimeFactor,
+		"Subarray with Maximum Sum": contiguousArraySum,
+		"Total Ways to Sum": totalWaysToSum,
+		"Total Ways to Sum II": totalWaysToSumII,
 		"Spiralize Matrix": null,
 		"Array Jumping Game": null,
 		"Array Jumping Game II": null,
@@ -57,9 +95,10 @@ export async function main(ns) {
 		"Encryption I: Caesar Cipher": null,
 		"Encryption II: Vigenère Cipher": null,
 	}
-	for (const [key, value] of Object.entries(solver)) {
-		if (type == key) { answer = value }
-	}
-	solve(ns, filename, host, answer);
+	for (const cct of ns.ls("home", ".cct")) {
+    const type = ns.codingcontract.getContractType(cct, "home")
+    const data = ns.codingcontract.getData(cct, "home")
+    ns.codingcontract.attempt(solver[type](data), cct, "home")
+  }
 
 }
