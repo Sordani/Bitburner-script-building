@@ -45,7 +45,7 @@ export function skillLimit(ns, skill) {
 		{ name: "Overclock", limit: 90 },					 //decreases time it takes to attempt a contract, op or blop by 1%
 		{ name: "Reaper", limit: 50 },						 //increases effective combat stats for BB by 2%
 		{ name: "Evasive System", limit: 50 },		 //increases effective dexterity and agility for BB by 4%
-		{ name: "Datamance", limit: 40 },					 //increases effectiveness in analysis and investigation by 5% (+ synthoid pop/com estimate accuracy)
+		{ name: "Datamancer", limit: 40 },					 //increases effectiveness in analysis and investigation by 5% (+ synthoid pop/com estimate accuracy)
 		{ name: "Cyber's Edge", limit: 25 }, 			 //increases max stamina by 2%
 		{ name: "Hands of Midas", limit: 50 }, 		 //increases money received from contracts by 10%
 		{ name: "Hyperdrive", limit: 50 }			 		 //increases exp earned from contracts, ops and blops by 10%
